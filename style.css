@@ -50,9 +50,11 @@ button { cursor: pointer; }
   letter-spacing: 1.5px;
 }
 
-.top-actions { display: flex; gap: 10px; align-items: center; }
+.top-actions { display: flex; gap: 8px; align-items: center; }
+.project-name, .project-select { min-width: 0; max-width: 150px; padding: 9px 10px; border-radius: 8px; border: 1px solid #3a4050; background: #20232c; color: var(--text); font: inherit; font-size: 12px; }
+.project-name { width: 130px; }
 button { border: 0; border-radius: 8px; padding: 10px 15px; font-weight: 700; }
-.run-button { color: #17151f; background: var(--green); min-width: 92px; }
+.run-button { white-space: nowrap; color: #17151f; background: var(--green); min-width: 92px; }
 .run-button:hover { filter: brightness(1.08); }
 .quiet-button { background: #2a2e39; color: var(--text); border: 1px solid #3a4050; }
 .quiet-button:hover { background: #343948; }
@@ -172,6 +174,10 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   .topbar { height: 58px; padding: 0 12px; }
   .brand { font-size: 16px; }
   .brand span { font-size: 9px; margin-left: 4px; }
+  .top-actions { gap: 5px; }
+  .project-name { display: none; }
+  .project-select { max-width: 105px; padding: 8px 5px; }
+  .run-button { min-width: 0; font-size: 11px; padding: 9px 8px; }
   button { padding: 9px 11px; }
   .workspace { display: flex; flex-direction: column; padding: 10px; gap: 10px; }
   .editor-panel, .output-panel { min-height: 360px; }
