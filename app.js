@@ -549,6 +549,8 @@ class DeltaParser {
     if (name === "background") { runtimeBackground=String(args[0]??"#ffffff"); runtimeScene=[]; drawRuntimeScene(); return null; }
     if (name === "centerText") { runtimeScene.push({type:"centerText",value:String(args[0]??"")}); drawRuntimeScene(); return null; }
     if (name === "square" || name === "moveSquare") { runtimeScene.push({type:"square",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:name==="moveSquare"}); if(name==="moveSquare")startRuntimeMovement(); drawRuntimeScene(); return null; }
+    if (name === "moveRect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:true}); startRuntimeMovement(); drawRuntimeScene(); return null; }
+    if (name === "moveCircle") { const radius=Math.max(0,Number(args[2])||0); runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true}); startRuntimeMovement(); drawRuntimeScene(); return null; }
     if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff")}); drawRuntimeScene(); return null; }
     if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff")}); drawRuntimeScene(); return null; }
     if (name === "text") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
@@ -603,7 +605,11 @@ function startRuntimeMovement(){
     if(runtimeHeldKeys.has("w")||runtimeHeldKeys.has("arrowup"))dy--;
     if(runtimeHeldKeys.has("s")||runtimeHeldKeys.has("arrowdown"))dy++;
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    if(dx||dy){for(const s of runtimeScene)if(s.moving){s.x=Math.max(0,Math.min(runtimeCanvas.width-s.size,s.x+dx*3.5*elapsed));s.y=Math.max(0,Math.min(runtimeCanvas.height-s.size,s.y+dy*3.5*elapsed));}drawRuntimeScene();}
+    if(dx||dy){for(const s of runtimeScene)if(s.moving){
+      const half=s.type==="circle"?s.radius:0, w=s.type==="square"?s.size:s.type==="rect"?s.width:0, h=s.type==="square"?s.size:s.type==="rect"?s.height:0;
+      s.x=Math.max(half,Math.min(runtimeCanvas.width-w-half,s.x+dx*3.5*elapsed));
+      s.y=Math.max(half,Math.min(runtimeCanvas.height-h-half,s.y+dy*3.5*elapsed));
+    }drawRuntimeScene();}
     runtimeWindow.requestAnimationFrame(frame);
   };runtimeWindow.requestAnimationFrame(frame);
 }
@@ -621,7 +627,7 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      .replace(/^([ \t]*)(square|rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "square" ? "moveSquare(" : shape + "("))
+      .replace(/^([ \t]*)(square|rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "square" ? "moveSquare(" : shape === "rect" ? "moveRect(" : "moveCircle("))
       .replace(/^([ \t]*)text:\((.*?)\s*:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\)[ \t]*$/gm, (_, indent, message, name) => indent + "centerText(" + JSON.stringify(message.trimEnd() + " ") + " + String(" + name + "))")
       .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
         const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
