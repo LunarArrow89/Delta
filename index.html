@@ -3,14 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#202020">
-  <title>Delta</title>
-  <link rel="stylesheet" href="style.css?v=6">
+  <meta name="theme-color" content="#17191f">
+  <title>Delta — Your First Programming Language</title>
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
-  <main id="game" aria-label="Delta game">
-    <div id="player" aria-label="Player"></div>
+  <header class="topbar">
+    <a class="brand" href="./">DELTA<span>LANG</span></a>
+    <div class="top-actions">
+      <button id="resetButton" class="quiet-button" type="button">Reset code</button>
+      <button id="runButton" class="run-button" type="button">▶ Run</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="editor-panel">
+      <div class="panel-heading">
+        <div><span class="status-dot"></span> <span>main.delta</span></div>
+        <span class="panel-note">DELTA LANGUAGE</span>
+      </div>
+      <div class="editor-wrap">
+        <div id="lineNumbers" class="line-numbers" aria-hidden="true">1</div>
+        <textarea id="codeEditor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Delta code editor"></textarea>
+      </div>
+      <div class="editor-footer"><span>Unsaved playground</span><span id="cursorInfo">Line 1</span></div>
+    </section>
+
+    <section class="output-panel">
+      <div class="panel-heading">
+        <span>Output</span>
+        <button id="clearButton" class="text-button" type="button">Clear</button>
+      </div>
+      <div id="output" class="output" role="log" aria-live="polite"><p class="placeholder">Run your Delta code to see what happens.</p></div>
+      <div class="output-footer"><span id="runStatus">Ready</span><span>Delta playground</span></div>
+    </section>
+
+    <aside class="help-panel">
+      <div class="panel-heading"><span>Language basics</span></div>
+      <div class="help-content">
+        <p class="help-intro">Write a little code. Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to run it.</p>
+        <h3>Show text</h3>
+        <pre><code>print("Hello, world!")</code></pre>
+        <h3>Save a value</h3>
+        <pre><code>let score = 10
+print(score)</code></pre>
+        <h3>Do math</h3>
+        <pre><code>let total = 4 + 6 * 2
+print(total)</code></pre>
+        <h3>Make a decision</h3>
+        <pre><code>let score = 12
+if score >= 10 {
+  print("You did it!")
+} else {
+  print("Try again")
+}</code></pre>
+        <h3>Change a variable</h3>
+        <pre><code>let score = 1
+score = score + 1
+print(score)</code></pre>
+        <p class="help-foot">Strings use quotes. Use <code>//</code> to write a comment. Statements can go on separate lines.</p>
+      </div>
+    </aside>
   </main>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
