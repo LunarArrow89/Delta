@@ -84,6 +84,23 @@ function renderHighlights() {
         code = "";
         continue;
       }
+      const askTextParen = code.match(/^(\\s*)ask:\\((.*)\\)$/);
+      if (askTextParen) {
+        const inner = askTextParen[2];
+        const joined = inner.match(/^(.*?):\\+:([A-Za-z_][A-Za-z0-9_]*):$/);
+        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
+        out += escapeHighlight(askTextParen[1]) + '<span class="syntax-purple">ask</span><span class="syntax-text-content">:( ';
+        if (joined) {
+          out += escapeHighlight(joined[1]) + '<span class="syntax-text-content">:+:</span>';
+          out += declared.has(joined[2]) ? '<span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span>' : '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
+          out += '<span class="syntax-text-content">:</span>';
+        } else {
+          out += escapeHighlight(inner);
+        }
+        out += '<span class="syntax-text-content">)</span>';
+        code = "";
+        continue;
+      }
       const askShortcut = code.match(/^(\\s*)ask:(.*):$/);
       if (askShortcut) {
         const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
