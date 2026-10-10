@@ -29,19 +29,13 @@ function saveCurrentProject() {
 }
 refreshProjects();
 
-const starterCode = `// Welcome to Delta!
-let name = "world"
-print("Hello, " + name + "!")
-
-let score = 8 + 4
-print("Your score is:")
-print(score)
-
-if score >= 10 {
-  print("You reached ten!")
-} else {
-  print("Keep going!")
-}`;
+const starterCode = `// Your first Delta program
+screen(640, 400)
+background("#182033")
+square(60, 80, 70, "#9c8cff")
+circle(220, 120, 35, "#72e0b1")
+text("Made with Delta!", 60, 230, "#ffffff", 28)
+print("Welcome to Delta!")`
 
 editor.value = localStorage.getItem("delta-code") || starterCode;
 
@@ -54,6 +48,7 @@ function updateEditorInfo() {
 editor.addEventListener("input", () => {
   updateEditorInfo();
   localStorage.setItem("delta-code", editor.value);
+  saveStatus.textContent = "Autosaved in this browser";
 });
 editor.addEventListener("click", updateEditorInfo);
 editor.addEventListener("keyup", updateEditorInfo);
@@ -413,7 +408,7 @@ document.getElementById("clearButton").addEventListener("click", () => {
 });
 document.getElementById("resetButton").addEventListener("click", () => {
   editor.value = starterCode;
-  localStorage.removeItem("delta-code");
+  localStorage.setItem("delta-code", editor.value);
   updateEditorInfo();
   output.replaceChildren();
   output.innerHTML = '<p class="placeholder">Starter code restored. Press Run when you're ready.</p>';
