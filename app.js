@@ -38,11 +38,62 @@ const previousCode = localStorage.getItem("delta-code") || "";
 editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
 localStorage.setItem("delta-code", editor.value);
 
+function escapeHighlight(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function renderHighlights() {
+  const layer = document.getElementById("highlightLayer");
+  if (!layer) return;
+  const reserved = new Set(["let", "var", "if", "else", "true", "false", "null", "and", "or", "not"]);
+  const builtins = new Set(["screen", "background", "square", "rect", "circle", "clear"]);
+  const html = editor.value.split("\n").map(line => {
+    const commentAt = line.indexOf("//");
+    let code = commentAt >= 0 ? line.slice(0, commentAt) : line;
+    const comment = commentAt >= 0 ? line.slice(commentAt) : "";
+    let out = "";
+    while (code.length) {
+      const textShortcut = code.match(/^text:(.*):$/);
+      if (textShortcut) {
+        out += '<span class="syntax-text-command">text:</span><span class="syntax-text-content">' + escapeHighlight(textShortcut[1]) + '</span><span class="syntax-text-command">:</span>';
+        code = "";
+        continue;
+      }
+      const quote = code.match(/^(["'])(?:\\\\.|(?!\\1)[^\\\\])*?\\1/);
+      if (quote) {
+        out += '<span class="syntax-string">' + escapeHighlight(quote[0]) + '</span>';
+        code = code.slice(quote[0].length);
+        continue;
+      }
+      const word = code.match(/^[A-Za-z_][A-Za-z0-9_]*/);
+      if (word) {
+        const name = word[0];
+        const rest = code.slice(name.length);
+        if (name === "text" && /^\\s*\\(/.test(rest)) {
+          out += '<span class="syntax-text-command">' + name + '</span>';
+        } else if (reserved.has(name) || builtins.has(name)) {
+          out += escapeHighlight(name);
+        } else {
+          out += '<span class="syntax-variable">' + name + '</span>';
+        }
+        code = rest;
+        continue;
+      }
+      out += escapeHighlight(code[0]);
+      code = code.slice(1);
+    }
+    if (comment) out += '<span class="syntax-comment">' + escapeHighlight(comment) + '</span>';
+    return out || " ";
+  }).join("\n");
+  layer.innerHTML = html + "\n";
+  layer.scrollTop = editor.scrollTop;
+  layer.scrollLeft = editor.scrollLeft;
+}
 function updateEditorInfo() {
   const lines = editor.value.split("\n").length;
   lineNumbers.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
   const before = editor.value.slice(0, editor.selectionStart);
   cursorInfo.textContent = "Line " + (before.split("\n").length);
+  renderHighlights();
 }
 editor.addEventListener("input", () => {
   updateEditorInfo();
@@ -51,7 +102,7 @@ editor.addEventListener("input", () => {
 });
 editor.addEventListener("click", updateEditorInfo);
 editor.addEventListener("keyup", updateEditorInfo);
-editor.addEventListener("scroll", () => { lineNumbers.scrollTop = editor.scrollTop; });
+editor.addEventListener("scroll", () => { lineNumbers.scrollTop = editor.scrollTop; const layer = document.getElementById("highlightLayer"); if (layer) { layer.scrollTop = editor.scrollTop; layer.scrollLeft = editor.scrollLeft; } });
 editor.addEventListener("keydown", (event) => {
   if (event.key === "Tab") {
     event.preventDefault();
