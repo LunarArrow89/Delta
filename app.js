@@ -60,176 +60,34 @@ function highlightDelimitedContent(value) {
 function renderHighlights() {
   const layer = document.getElementById("highlightLayer");
   if (!layer) return;
-  const reserved = new Set(["let", "var", "if", "then", "else", "true", "false", "null", "and", "or", "not"]);
-  const controlKeywords = new Set(["if", "then", "else"]);
-  const builtins = new Set(["screen", "background", "style", "square", "rect", "circle", "clear"]);
+
+  // Highlighting must never insert, remove, or reorder source characters.
+  // Build the visible layer from the exact editor text, escaping every raw
+  // character before adding only color spans around existing text.
   const html = editor.value.split("\n").map(line => {
     const commentAt = line.indexOf("//");
-    let code = commentAt >= 0 ? line.slice(0, commentAt) : line;
+    const code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
-    while (code.length) {
-      const askParen = code.match(/^(\s*ask\s*\()(.*)(\)\s*;?\s*)$/);
-      if (askParen) {
-        const declared = new Set(Array.from(editor.value.matchAll(/\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
-        const inner = askParen[2];
-        let askContent = "";
-        if (inner.includes(":") || /\/[A-Za-z_][A-Za-z0-9_]*\//.test(inner)) {
-          askContent = highlightDelimitedContent(inner);
-        } else {
-          let remaining = inner;
-          while (remaining.length) {
-            const quote = remaining.match(/^("|')(?:\\.|(?!\1)[^\\])*?\1/);
-            if (quote) {
-              askContent += '<span class="syntax-text-content">' + escapeHighlight(quote[0]) + '</span>';
-              remaining = remaining.slice(quote[0].length);
-              continue;
-            }
-            const word = remaining.match(/^[A-Za-z_][A-Za-z0-9_]*/);
-            if (word) {
-              const name = word[0];
-              askContent += declared.has(name)
-                ? '<span class="syntax-variable">' + escapeHighlight(name) + '</span>'
-                : '<span class="syntax-text-content">' + escapeHighlight(name) + '</span>';
-              remaining = remaining.slice(name.length);
-              continue;
-            }
-            askContent += '<span class="syntax-text-content">' + escapeHighlight(remaining[0]) + '</span>';
-            remaining = remaining.slice(1);
-          }
-        }
-        out += '<span class="syntax-purple">ask</span><span class="syntax-text-content">' + escapeHighlight(askParen[1].slice(3)) + '</span>';
-        out += askContent;
-        out += '<span class="syntax-text-content">' + escapeHighlight(askParen[3]) + '</span>';
-        code = "";
-        continue;
+    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(code)) !== null) {
+      out += escapeHighlight(code.slice(lastIndex, match.index));
+      if (match[1] !== undefined) {
+        out += '<span class="syntax-text-content">' + escapeHighlight(match[0]) + '</span>';
+      } else if (match[2] !== undefined) {
+        out += '<span class="syntax-variable">' + escapeHighlight(match[0]) + '</span>';
+      } else {
+        out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
       }
-      const askTextParen = code.match(/^(\\s*)ask:\\((.*)\\)$/);
-      if (askTextParen) {
-        const inner = askTextParen[2];
-        const joined = inner.match(/^(.*?):\\+:([A-Za-z_][A-Za-z0-9_]*):$/);
-        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
-        out += escapeHighlight(askTextParen[1]) + '<span class="syntax-purple">ask</span><span class="syntax-text-content">:( ';
-        if (joined) {
-          out += escapeHighlight(joined[1]) + '<span class="syntax-text-content">:+:</span>';
-          out += declared.has(joined[2]) ? '<span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span>' : '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
-          out += '<span class="syntax-text-content">:</span>';
-        } else {
-          out += escapeHighlight(inner);
-        }
-        out += '<span class="syntax-text-content">)</span>';
-        code = "";
-        continue;
-      }
-      const askColonParen = code.match(/^(\\s*)ask\\(:([\\s\\S]*?):\\)$/);
-      if (askColonParen) {
-        const inner = askColonParen[2];
-        const joined = inner.match(/^(.*?):\\+:([A-Za-z_][A-Za-z0-9_]*):$/);
-        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
-        out += escapeHighlight(askColonParen[1]) + '<span class="syntax-purple">ask</span><span class="syntax-text-content">(:';
-        if (joined) {
-          out += escapeHighlight(joined[1]) + '<span class="syntax-text-content">:+:</span>';
-          out += declared.has(joined[2]) ? '<span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span>' : '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
-          out += '<span class="syntax-text-content">:</span>';
-        } else {
-          out += escapeHighlight(inner);
-        }
-        out += '<span class="syntax-text-content">:)</span>';
-        code = "";
-        continue;
-      }
-      const askShortcut = code.match(/^(\\s*)ask:(.*):$/);
-      if (askShortcut) {
-        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
-        const inner = askShortcut[2];
-        const joined = inner.match(/^(.*?):\\+:([A-Za-z_][A-Za-z0-9_]*):$/);
-        out += escapeHighlight(askShortcut[1]) + '<span class="syntax-purple">ask</span><span class="syntax-text-content">:';
-        if (joined) {
-          out += escapeHighlight(joined[1]) + '<span class="syntax-text-content">:+:</span>';
-          out += declared.has(joined[2]) ? '<span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span>' : '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
-          out += '<span class="syntax-text-content">:</span>';
-        } else {
-          out += escapeHighlight(inner);
-        }
-        out += ':</span>';
-        code = "";
-        continue;
-      }
-      const textColonParen = code.match(/^(\s*)text\(:([\s\S]*?)(\))?$/);
-      if (textColonParen) {
-        const inner = textColonParen[2];
-        out += escapeHighlight(textColonParen[1]) + '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span>';
-        out += highlightDelimitedContent(inner);
-        if (textColonParen[3]) out += '<span class="syntax-parenthesis">)</span>';
-        code = "";
-        continue;
-      }
-      const textParen = code.match(/^text\((.*)\)$/);
-      if (textParen) {
-        const joined = textParen[1].match(/^(.*?)(\s*:\s*\+\s*)(\/[A-Za-z_][A-Za-z0-9_]*\/)(\s*)$/);
-        out += '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span>';
-        if (joined) {
-          out += '<span class="syntax-text-content">' + escapeHighlight(joined[1]) + '</span>';
-          out += '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
-          out += '<span class="syntax-variable">' + escapeHighlight(joined[3]) + '</span>';
-          out += '<span class="syntax-text-content">' + escapeHighlight(joined[4]) + '</span>';
-        } else {
-          out += highlightDelimitedContent(textParen[1]);
-        }
-        out += '<span class="syntax-parenthesis">)</span>';
-        code = "";
-        continue;
-      }
-      const textShortcut = code.match(/^text:(.*):$/);
-      if (textShortcut) {
-        const inner = textShortcut[1];
-        const joined = inner.match(/^(.*?):\+:([A-Za-z_][A-Za-z0-9_]*):$/);
-        out += '<span class="syntax-text-content">text:' + escapeHighlight(joined ? joined[1] : inner);
-        if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';
-        out += ':</span>';
-        code = "";
-        continue;
-      }
-      const quote = code.match(/^("|')(?:\\.|(?!\1)[^\\])*?\1/);
-      if (quote) {
-        out += '<span class="syntax-string">' + escapeHighlight(quote[0]) + '</span>';
-        code = code.slice(quote[0].length);
-        continue;
-      }
-      const tag = code.match(/^\*([A-Za-z_][A-Za-z0-9_]*)\*/);
-      if (tag) {
-        out += '<span class="syntax-tag">' + escapeHighlight(tag[0]) + '</span>';
-        code = code.slice(tag[0].length);
-        continue;
-      }
-      const word = code.match(/^[A-Za-z_][A-Za-z0-9_]*/);
-      if (word) {
-        const name = word[0];
-        const rest = code.slice(name.length);
-        if (name === "ask" || name === "gather") {
-          out += '<span class="syntax-purple">' + escapeHighlight(name) + '</span>';
-        } else if (name === "text" && /^\s*\(/.test(rest)) {
-          out += '<span class="syntax-text-command">' + name + '</span>';
-        } else if (controlKeywords.has(name) || /^if\d+$/.test(name)) {
-          out += '<span class="syntax-keyword">' + escapeHighlight(name) + '</span>';
-        } else if (["screen", "background", "style"].includes(name)) {
-          out += '<span class="syntax-style-command">' + escapeHighlight(name) + '</span>';
-        } else if (builtins.has(name)) {
-          out += escapeHighlight(name);
-        } else if (reserved.has(name)) {
-          out += escapeHighlight(name);
-        } else {
-          out += '<span class="syntax-variable">' + escapeHighlight(name) + '</span>';
-        }
-        code = rest;
-        continue;
-      }
-      out += escapeHighlight(code[0]);
-      code = code.slice(1);
+      lastIndex = match.index + match[0].length;
     }
+    out += escapeHighlight(code.slice(lastIndex));
     if (comment) out += '<span class="syntax-comment">' + escapeHighlight(comment) + '</span>';
     return out || " ";
   }).join("\n");
+
   layer.innerHTML = html + "\n";
   layer.scrollTop = editor.scrollTop;
   layer.scrollLeft = editor.scrollLeft;
