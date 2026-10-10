@@ -226,3 +226,5 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .syntax-text-command { color: #ff6b6b; }
 .syntax-text-content, .syntax-string { color: #72e0b1; }
 .syntax-comment { color: #737b8d; font-style: italic; }
+
+.syntax-keyword { color: #ffad5c; }
