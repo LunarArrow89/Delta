@@ -44,7 +44,8 @@ function escapeHighlight(value) {
 function renderHighlights() {
   const layer = document.getElementById("highlightLayer");
   if (!layer) return;
-  const reserved = new Set(["let", "var", "if", "else", "true", "false", "null", "and", "or", "not"]);
+  const reserved = new Set(["let", "var", "if", "then", "else", "true", "false", "null", "and", "or", "not"]);
+  const controlKeywords = new Set(["if", "then", "else"]);
   const builtins = new Set(["screen", "background", "square", "rect", "circle", "clear"]);
   const html = editor.value.split("\n").map(line => {
     const commentAt = line.indexOf("//");
@@ -70,6 +71,8 @@ function renderHighlights() {
         const rest = code.slice(name.length);
         if (name === "text" && /^\s*\(/.test(rest)) {
           out += '<span class="syntax-text-command">' + name + '</span>';
+        } else if (controlKeywords.has(name)) {
+          out += '<span class="syntax-keyword">' + escapeHighlight(name) + '</span>';
         } else if (reserved.has(name) || builtins.has(name)) {
           out += escapeHighlight(name);
         } else {
