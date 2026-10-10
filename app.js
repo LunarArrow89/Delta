@@ -205,7 +205,9 @@ function renderHighlights() {
           out += '<span class="syntax-text-command">' + name + '</span>';
         } else if (controlKeywords.has(name) || /^if\d+$/.test(name)) {
           out += '<span class="syntax-keyword">' + escapeHighlight(name) + '</span>';
-        } else if (reserved.has(name) || builtins.has(name)) {
+        } else if (builtins.has(name)) {
+          out += '<span class="syntax-style-command">' + escapeHighlight(name) + '</span>';
+        } else if (reserved.has(name)) {
           out += escapeHighlight(name);
         } else {
           out += '<span class="syntax-variable">' + escapeHighlight(name) + '</span>';
