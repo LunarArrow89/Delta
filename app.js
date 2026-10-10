@@ -560,8 +560,18 @@ class DeltaParser {
     if (name === "setSquareSpeed") { runtimeSquareSettings.speed = Math.max(0, Number(args[0]) || 0); return null; }
     if (name === "square" || name === "moveSquare") {
       const moving = name === "moveSquare";
-      const hasLegacySpeed = typeof args[3] === "number";
-      const shape = {type:"square",x:Number(args[0])||runtimeSquareSettings.x,y:Number(args[1])||runtimeSquareSettings.y,size:Math.max(0,Number(args[2])||runtimeSquareSettings.size),color:String(args[hasLegacySpeed?5:3]??"#ffffff"),moving,speed:moving?(runtimeSquareSettings.speed??3.5):0,controls:moving?parseMovementControls(args[hasLegacySpeed?4:4]):defaultMovementControls()};
+      const legacy = typeof args[0] === "number";
+      const legacySpeed = legacy && typeof args[3] === "number";
+      const shape = {
+        type:"square",
+        x:legacy?(Number(args[0])||0):runtimeSquareSettings.x,
+        y:legacy?(Number(args[1])||0):runtimeSquareSettings.y,
+        size:legacy?Math.max(0,Number(args[2])||0):runtimeSquareSettings.size,
+        color:String(args[legacySpeed?5:legacy?3:1]??"#ffffff"),
+        moving,
+        speed:moving?(legacySpeed?Math.max(0,Number(args[3])||3.5):(runtimeSquareSettings.speed??3.5)):0,
+        controls:moving?parseMovementControls(legacy?(legacySpeed?args[4]:args[4]):args[0]):defaultMovementControls()
+      };
       runtimeScene.push(shape);
       if(moving)startRuntimeMovement(); drawRuntimeScene(); return null;
     }
