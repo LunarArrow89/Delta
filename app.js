@@ -1,7 +1,7 @@
 const player = document.getElementById("player");
 const game = document.getElementById("game");
 const keys = new Set();
-const speed = 300;
+const speed = 2500;
 const size = 36;
 
 let x = 0;
