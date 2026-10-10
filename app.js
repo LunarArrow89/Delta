@@ -1,77 +1,56 @@
-const game = document.getElementById("game");
 const player = document.getElementById("player");
-
-const keys = new Set();
-const speed = 240;
-const playerSize = 36;
-
+const step = 12;
 let x = 0;
 let y = 0;
-let lastTime = 0;
 
-function resize() {
-  x = Math.max(0, Math.min(x, window.innerWidth - playerSize));
-  y = Math.max(0, Math.min(y, window.innerHeight - playerSize));
-  draw();
-}
-
-function draw() {
-  player.style.transform = `translate(${x}px, ${y}px)`;
-}
-
-window.addEventListener("keydown", (event) => {
-  const key = event.key.toLowerCase();
-  if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
-    event.preventDefault();
-    keys.add(key);
-  }
-});
-
-window.addEventListener("keyup", (event) => {
-  keys.delete(event.key.toLowerCase());
-});
-
-window.addEventListener("blur", () => keys.clear());
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) keys.clear();
-});
-
-function loop(time) {
-  if (!lastTime) lastTime = time;
-  const dt = Math.min((time - lastTime) / 1000, 0.05);
-  lastTime = time;
-
-  let dx = 0;
-  let dy = 0;
-
-  if (keys.has("a") || keys.has("arrowleft")) dx--;
-  if (keys.has("d") || keys.has("arrowright")) dx++;
-  if (keys.has("w") || keys.has("arrowup")) dy--;
-  if (keys.has("s") || keys.has("arrowdown")) dy++;
-
-  if (dx && dy) {
-    dx *= Math.SQRT1_2;
-    dy *= Math.SQRT1_2;
+function move(key) {
+  switch (key.toLowerCase()) {
+    case "arrowup":
+    case "w":
+      y -= step;
+      break;
+    case "arrowdown":
+    case "s":
+      y += step;
+      break;
+    case "arrowleft":
+    case "a":
+      x -= step;
+      break;
+    case "arrowright":
+    case "d":
+      x += step;
+      break;
+    default:
+      return;
   }
 
-  x += dx * speed * dt;
-  y += dy * speed * dt;
+  const size = 36;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
 
-  if (x > window.innerWidth) x = -playerSize;
-  if (x < -playerSize) x = window.innerWidth;
-  if (y > window.innerHeight) y = -playerSize;
-  if (y < -playerSize) y = window.innerHeight;
+  if (x > width) x = -size;
+  if (x < -size) x = width;
+  if (y > height) y = -size;
+  if (y < -size) y = height;
 
-  draw();
-  requestAnimationFrame(loop);
+  player.style.left = x + "px";
+  player.style.top = y + "px";
 }
 
 function start() {
-  x = (window.innerWidth - playerSize) / 2;
-  y = (window.innerHeight - playerSize) / 2;
-  draw();
-  requestAnimationFrame(loop);
+  x = Math.round((window.innerWidth - 36) / 2);
+  y = Math.round((window.innerHeight - 36) / 2);
+  player.style.left = x + "px";
+  player.style.top = y + "px";
 }
 
-window.addEventListener("resize", resize);
+window.addEventListener("keydown", (event) => {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) {
+    event.preventDefault();
+  }
+  move(event.key);
+});
+
+window.addEventListener("resize", start);
 start();
