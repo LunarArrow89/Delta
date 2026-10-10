@@ -486,3 +486,18 @@ document.getElementById("resetButton").addEventListener("click", () => {
   runStatus.textContent = "Ready";
   editor.focus();
 });
+
+
+const workspace = document.getElementById("workspace");
+const codeTab = document.getElementById("codeTab");
+const tutorialTab = document.getElementById("tutorialTab");
+function setEditorView(view) {
+  const tutorial = view === "tutorial";
+  workspace.classList.toggle("tutorial-mode", tutorial);
+  codeTab.classList.toggle("active", !tutorial);
+  tutorialTab.classList.toggle("active", tutorial);
+  codeTab.setAttribute("aria-selected", String(!tutorial));
+  tutorialTab.setAttribute("aria-selected", String(tutorial));
+}
+codeTab.addEventListener("click", () => setEditorView("code"));
+tutorialTab.addEventListener("click", () => setEditorView("tutorial"));
