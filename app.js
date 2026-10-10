@@ -554,9 +554,25 @@ class DeltaParser {
     if (name === "screen") { if (!runtimeCanvas) throw new Error("The game screen is not available. Press Run again."); runtimeCanvas.width=Math.max(100,Math.min(1600,Number(args[0])||640)); runtimeCanvas.height=Math.max(100,Math.min(1200,Number(args[1])||400)); drawRuntimeScene(); return null; }
     if (name === "background") { runtimeBackground=String(args[0]??"#ffffff"); runtimeScene=[]; drawRuntimeScene(); return null; }
     if (name === "centerText") { runtimeScene.push({type:"centerText",value:String(args[0]??"")}); drawRuntimeScene(); return null; }
-    if (name === "square" || name === "moveSquare") { runtimeScene.push({type:"square",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:name==="moveSquare"}); if(name==="moveSquare")startRuntimeMovement(); drawRuntimeScene(); return null; }
-    if (name === "moveRect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:true}); startRuntimeMovement(); drawRuntimeScene(); return null; }
-    if (name === "moveCircle") { const radius=Math.max(0,Number(args[2])||0); runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true}); startRuntimeMovement(); drawRuntimeScene(); return null; }
+    if (name === "square" || name === "moveSquare") {
+      const moving = name === "moveSquare";
+      const fourthIsSpeed = typeof args[3] === "number";
+      const color = fourthIsSpeed ? String(args[5] ?? "#ffffff") : String(args[3] ?? "#ffffff");
+      const speed = moving ? Math.max(0, Number(fourthIsSpeed ? args[3] : args[4]) || 3.5) : 0;
+      const controls = moving ? parseMovementControls(args[fourthIsSpeed ? 4 : 5]) : defaultMovementControls();
+      runtimeScene.push({type:"square",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color,moving,speed,controls});
+      if(moving)startRuntimeMovement(); drawRuntimeScene(); return null;
+    }
+    if (name === "moveRect") {
+      const speed = Math.max(0, Number(args[5]) || 3.5);
+      runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:true,speed,controls:parseMovementControls(args[6])});
+      startRuntimeMovement(); drawRuntimeScene(); return null;
+    }
+    if (name === "moveCircle") {
+      const radius=Math.max(0,Number(args[2])||0);
+      runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true,speed:Math.max(0,Number(args[4])||3.5),controls:parseMovementControls(args[5])});
+      startRuntimeMovement(); drawRuntimeScene(); return null;
+    }
     if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff")}); drawRuntimeScene(); return null; }
     if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff")}); drawRuntimeScene(); return null; }
     if (name === "text") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
@@ -596,6 +612,17 @@ function drawRuntimeScene() {
     else if(s.type==="centerText"){runtimeContext.font="28px system-ui,sans-serif";runtimeContext.textAlign="center";runtimeContext.textBaseline="middle";runtimeContext.fillText(s.value,runtimeCanvas.width/2,runtimeCanvas.height/2);runtimeContext.textAlign="start";runtimeContext.textBaseline="alphabetic";}
   }
 }
+function defaultMovementControls(){
+  return {up:["w","arrowup"],down:["s","arrowdown"],left:["a","arrowleft"],right:["d","arrowright"]};
+}
+function parseMovementControls(value){
+  if(value===undefined||value===null||String(value).trim()==="")return defaultMovementControls();
+  const groups=String(value).split("|");
+  if(groups.length!==4)throw new Error('Movement controls need four groups in this order: up|down|left|right. Example: "w,arrowup|s,arrowdown|a,arrowleft|d,arrowright".');
+  const controls=groups.map(group=>group.split(",").map(key=>key.trim().toLowerCase()).filter(Boolean));
+  if(controls.some(group=>group.length===0))throw new Error("Each movement direction needs at least one key.");
+  return {up:controls[0],down:controls[1],left:controls[2],right:controls[3]};
+}
 function startRuntimeMovement(){
   if(runtimeMovementStarted||!runtimeWindow||runtimeWindow.closed)return;
   runtimeMovementStarted=true; runtimeHeldKeys=new Set();
@@ -605,17 +632,24 @@ function startRuntimeMovement(){
   const frame=t=>{
     if(!runtimeWindow||runtimeWindow.closed||!runtimeCanvas){runtimeMovementStarted=false;return;}
     const elapsed=runtimeLastFrame?Math.min((t-runtimeLastFrame)/16.67,3):1;runtimeLastFrame=t;
-    let dx=0,dy=0;
-    if(runtimeHeldKeys.has("a")||runtimeHeldKeys.has("arrowleft"))dx--;
-    if(runtimeHeldKeys.has("d")||runtimeHeldKeys.has("arrowright"))dx++;
-    if(runtimeHeldKeys.has("w")||runtimeHeldKeys.has("arrowup"))dy--;
-    if(runtimeHeldKeys.has("s")||runtimeHeldKeys.has("arrowdown"))dy++;
-    if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    if(dx||dy){for(const s of runtimeScene)if(s.moving){
-      const half=s.type==="circle"?s.radius:0, w=s.type==="square"?s.size:s.type==="rect"?s.width:0, h=s.type==="square"?s.size:s.type==="rect"?s.height:0;
-      s.x=Math.max(half,Math.min(runtimeCanvas.width-w-half,s.x+dx*3.5*elapsed));
-      s.y=Math.max(half,Math.min(runtimeCanvas.height-h-half,s.y+dy*3.5*elapsed));
-    }drawRuntimeScene();}
+    let changed=false;
+    for(const s of runtimeScene)if(s.moving){
+      const c=s.controls||defaultMovementControls();
+      let dx=0,dy=0;
+      if(c.up.some(k=>runtimeHeldKeys.has(k)))dy--;
+      if(c.down.some(k=>runtimeHeldKeys.has(k)))dy++;
+      if(c.left.some(k=>runtimeHeldKeys.has(k)))dx--;
+      if(c.right.some(k=>runtimeHeldKeys.has(k)))dx++;
+      if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
+      if(dx||dy){
+        const half=s.type==="circle"?s.radius:0, w=s.type==="square"?s.size:s.type==="rect"?s.width:0, h=s.type==="square"?s.size:s.type==="rect"?s.height:0;
+        const speed=Math.max(0,Number(s.speed)||3.5);
+        s.x=Math.max(half,Math.min(runtimeCanvas.width-w-half,s.x+dx*speed*elapsed));
+        s.y=Math.max(half,Math.min(runtimeCanvas.height-h-half,s.y+dy*speed*elapsed));
+        changed=true;
+      }
+    }
+    if(changed)drawRuntimeScene();
     runtimeWindow.requestAnimationFrame(frame);
   };runtimeWindow.requestAnimationFrame(frame);
 }
