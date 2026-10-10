@@ -73,9 +73,13 @@ function renderHighlights() {
     while ((match = pattern.exec(code)) !== null) {
       out += escapeHighlight(code.slice(lastIndex, match.index));
       if (match[1] !== undefined) {
-        out += '<span class="syntax-text-content">' + escapeHighlight(match[0]) + '</span>';
+        out += '<span class="syntax-delimiter">:</span>';
+        out += '<span class="syntax-text-content">' + escapeHighlight(match[1]) + '</span>';
+        out += '<span class="syntax-delimiter">:</span>';
       } else if (match[2] !== undefined) {
-        out += '<span class="syntax-variable">' + escapeHighlight(match[0]) + '</span>';
+        out += '<span class="syntax-delimiter">/</span>';
+        out += '<span class="syntax-variable">' + escapeHighlight(match[2]) + '</span>';
+        out += '<span class="syntax-delimiter">/</span>';
       } else if (match[3] !== undefined) {
         out += '<span class="syntax-keyword">' + escapeHighlight(match[3]) + '</span>';
         out += escapeHighlight(match[4] || "");
