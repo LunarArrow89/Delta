@@ -101,6 +101,23 @@ function renderHighlights() {
         code = "";
         continue;
       }
+      const askColonParen = code.match(/^(\\s*)ask\\(:([\\s\\S]*?):\\)$/);
+      if (askColonParen) {
+        const inner = askColonParen[2];
+        const joined = inner.match(/^(.*?):\\+:([A-Za-z_][A-Za-z0-9_]*):$/);
+        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
+        out += escapeHighlight(askColonParen[1]) + '<span class="syntax-purple">ask</span><span class="syntax-text-content">(:';
+        if (joined) {
+          out += escapeHighlight(joined[1]) + '<span class="syntax-text-content">:+:</span>';
+          out += declared.has(joined[2]) ? '<span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span>' : '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
+          out += '<span class="syntax-text-content">:</span>';
+        } else {
+          out += escapeHighlight(inner);
+        }
+        out += '<span class="syntax-text-content">:)</span>';
+        code = "";
+        continue;
+      }
       const askShortcut = code.match(/^(\\s*)ask:(.*):$/);
       if (askShortcut) {
         const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
@@ -560,6 +577,11 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
+      .replace(/^([ \\t]*)ask\\(:([\\s\\S]*?):\\)[ \\t]*$/gm, (_, indent, inside) => {
+        const joined = inside.match(/^(.*?):\\+:([A-Za-z_][A-Za-z0-9_]*):$/);
+        if (joined) return indent + "ask(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
+        return indent + "ask(" + JSON.stringify(inside) + ")";
+      })
       .replace(/^([ \\t]*)ask:\\((.*?)\\)[ \\t]*$/gm, (_, indent, inside) => {
         const joined = inside.match(/^(.*?)\\s*:\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):\\s*$/);
         if (joined) return indent + "ask(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
