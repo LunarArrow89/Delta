@@ -73,7 +73,7 @@ function renderHighlights() {
       if (word) {
         const name = word[0];
         const rest = code.slice(name.length);
-        if (name === "text" && /^\s*\(/.test(rest)) {
+        if (name === "ask" || name === "gather") {\n          out += '<span class="syntax-purple">' + escapeHighlight(name) + '</span>';\n        } else if (name === "text" && /^\s*\(/.test(rest)) {
           out += '<span class="syntax-text-command">' + name + '</span>';
         } else if (controlKeywords.has(name)) {
           out += '<span class="syntax-keyword">' + escapeHighlight(name) + '</span>';
