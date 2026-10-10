@@ -31,13 +31,12 @@ refreshProjects();
 
 const starterCode = `// Your first Delta program
 screen(640, 400)
-background("#182033")
-square(60, 80, 70, "#9c8cff")
-circle(220, 120, 35, "#72e0b1")
-text("Made with Delta!", 60, 230, "#ffffff", 28)
-print("Welcome to Delta!")`
+background("#10131c")
+text:Hello!:`
 
-editor.value = localStorage.getItem("delta-code") || starterCode;
+const previousCode = localStorage.getItem("delta-code") || "";
+editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
+localStorage.setItem("delta-code", editor.value);
 
 function updateEditorInfo() {
   const lines = editor.value.split("\n").length;
@@ -119,7 +118,7 @@ function tokenize(source) {
       i += operator.length;
       continue;
     }
-    if ("+-*/%(){}=<>!;,".includes(c)) {
+    if ("+-*/%(){}=<>!;,:".includes(c)) {
       tokens.push({ type: "symbol", value: c });
       i++;
       continue;
@@ -330,9 +329,20 @@ class DeltaParser {
   }
   callBuiltin(name, args) {
     if (name === "screen") {
-      if (!runtimeCanvas || !runtimeContext) throw new Error("Click Run to open the program window first.");
+      if (!runtimeCanvas || !runtimeContext) throw new Error("The game screen is not available. Press Run again.");
       runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
       runtimeCanvas.height = Math.max(100, Math.min(1200, Number(args[1]) || 400)); return null;
+    }
+    if (name === "centerText") {
+      if (!runtimeContext || !runtimeCanvas) throw new Error("The game screen is not available. Press Run again.");
+      runtimeContext.fillStyle = "#ffffff";
+      runtimeContext.font = "28px system-ui, sans-serif";
+      runtimeContext.textAlign = "center";
+      runtimeContext.textBaseline = "middle";
+      runtimeContext.fillText(String(args[0] ?? ""), runtimeCanvas.width / 2, runtimeCanvas.height / 2);
+      runtimeContext.textAlign = "start";
+      runtimeContext.textBaseline = "alphabetic";
+      return null;
     }
     if (name === "background") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[0] ?? "#ffffff"); runtimeContext.fillRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
     if (name === "square") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[3] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[2]) || 0)); return null; }
@@ -368,7 +378,7 @@ function openRuntimeWindow() {
   runtimeWindow = window.open("", "DeltaProgramWindow", "popup,width=900,height=650,resizable=yes,scrollbars=yes");
   if (!runtimeWindow) { addOutput("Allow pop-ups for this site so Delta can open your program in a new window.", "error"); runStatus.textContent = "Popup blocked"; return false; }
   runtimeWindow.document.open();
-  runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Program</title><style>*{box-sizing:border-box}body{margin:0;background:#17191f;color:#eef0f6;font:14px system-ui,sans-serif;padding:18px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}h1{font-size:16px}#state{color:#72e0b1;font-size:12px}canvas{display:block;max-width:100%;height:auto;background:#fff;border:1px solid #343946}#log{margin-top:14px;padding:12px;background:#20232c;border:1px solid #343946;border-radius:8px;min-height:45px}</style></head><body><header><h1>Delta program</h1><span id="state">Running</span></header><canvas id="screen" width="640" height="400"></canvas><section id="log"></section></body></html>');
+  runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Game</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}canvas{display:block;width:100vw;height:100vh;background:#000}</style></head><body><canvas id="screen" width="640" height="400"></canvas></body></html>');
   runtimeWindow.document.close();
   runtimeCanvas = runtimeWindow.document.getElementById("screen");
   runtimeContext = runtimeCanvas.getContext("2d");
@@ -381,7 +391,8 @@ function runCode() {
   openRuntimeWindow();
   const started = performance.now();
   try {
-    const parser = new DeltaParser(tokenize(editor.value), value => addOutput(formatValue(value)));
+    const source = editor.value.replace(/^([ \\t]*)text:(.*):[ \\t]*$/gm, (_, indent, value) => indent + "centerText(" + JSON.stringify(value) + ")");
+    const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
     if (runtimeWindow && !runtimeWindow.closed) runtimeWindow.document.getElementById("state").textContent = "Finished";
