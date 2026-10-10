@@ -53,7 +53,7 @@ function renderHighlights() {
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
     while (code.length) {
-      const textShortcut = code.match(/^text:(.*):$/);
+      const textParen = code.match(/^text:\\((.*)\\)$/);\n      if (textParen) {\n        const joined = textParen[1].match(/^(.*?):\\+:(\\w+):$/);\n        out += '<span class="syntax-text-content">text:(' + escapeHighlight(joined ? joined[1] : textParen[1]);\n        if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';\n        out += ')</span>';\n        code = "";\n        continue;\n      }\n      const textShortcut = code.match(/^text:(.*):$/);
       if (textShortcut) {
         const inner = textShortcut[1];
         const joined = inner.match(/^(.*?):\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):\\s*$/);
