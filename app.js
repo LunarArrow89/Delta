@@ -679,8 +679,22 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      .replace(/^([ \t]*)square\s*\*size\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSize(" + args + ")")
-      .replace(/^([ \t]*)square\s*\*location\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareLocation(" + args + ")")
+      .replace(/^([ \t]*)square\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, body) => {
+        const lines = body.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        const statements = [];
+        let movement = null;
+        for (const line of lines) {
+          const match = line.match(/^(location|size|speed|movement)\s*\((.*)\)\s*$/);
+          if (!match) throw new Error("Unknown square setting: " + line);
+          if (match[1] === "location") statements.push("setSquareLocation(" + match[2] + ")");
+          else if (match[1] === "size") statements.push("setSquareSize(" + match[2] + ")");
+          else if (match[1] === "speed") statements.push("setSquareSpeed(" + match[2] + ")");
+          else movement = match[2];
+        }
+        statements.push(movement === null ? "square()" : "moveSquare(" + movement + ")");
+        return indent + statements.join("\n" + indent);
+      })
+      .replace(/^([ \t]*)square\s*\*size\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSize(" + args + ")")      .replace(/^([ \t]*)square\s*\*location\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareLocation(" + args + ")")
       .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
       .replace(/^([ \t]*)square\s*\*movement\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "moveSquare(" + args + ")")
       .replace(/^([ \t]*)(rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "rect" ? "moveRect(" : "moveCircle("))
