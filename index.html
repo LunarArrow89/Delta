@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,19 +8,10 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="game">
-    <header>
-      <h1>DELTA</h1>
-      <p>A little world in motion.</p>
-    </header>
-
-    <div id="game-screen">
-      <div id="player"></div>
-    </div>
-
-    <p class="status">The journey continues...</p>
+  <main id="game" aria-label="Delta game">
+    <div id="player" aria-label="Player"></div>
+    <div id="controls">MOVE: WASD OR ARROW KEYS</div>
   </main>
-
   <script src="app.js"></script>
 </body>
 </html>
