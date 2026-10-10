@@ -225,7 +225,7 @@ class DeltaParser {
     if (inBlock) this.expect("}");
   }
   statement() {
-    if (this.match("let", "var")) {
+    if (this.match("gather")) {\n      this.expect("(");\n      const keyName = this.identifier();\n      this.expect(")");\n      const parser = this;\n      if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before gathering a key.");\n      throw { deltaWaitingForKey: true, resume() {\n        const handler = event => {\n          event.preventDefault();\n          parser.variables[keyName] = event.key.toLowerCase();\n          runtimeWindow.removeEventListener("keydown", handler);\n          const prompt = runtimeWindow.document.getElementById("delta-ask-prompt");\n          if (prompt) prompt.remove();\n          try { parser.statements(false); } catch (error) { if (error?.deltaWaitingForKey) error.resume(); else { addOutput("Error: " + error.message, "error"); runStatus.textContent = "Error"; } }\n        };\n        runtimeWindow.addEventListener("keydown", handler);\n        runStatus.textContent = "Waiting for a key…";\n      } };\n    }\n    if (this.match("let", "var")) {
       const name = this.identifier();
       this.expect("=");
       this.variables[name] = this.expression();
@@ -386,7 +386,7 @@ class DeltaParser {
     throw new Error('Expected a value, but found "' + (token.value || "end of code") + '".');
   }
   callBuiltin(name, args) {
-    if (name === "String") return String(args[0] ?? "");
+    if (name === "String") return String(args[0] ?? "");\n    if (name === "ask") {\n      if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before asking for a key.");\n      let prompt = runtimeWindow.document.getElementById("delta-ask-prompt");\n      if (!prompt) { prompt = runtimeWindow.document.createElement("div"); prompt.id = "delta-ask-prompt"; prompt.style.cssText = "position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:90vw;padding:14px 20px;border-radius:12px;background:#24202e;color:#e8d8ff;border:1px solid #a879d8;font:16px system-ui,sans-serif;text-align:center;z-index:9999;box-shadow:0 6px 24px #0008"; runtimeWindow.document.body.appendChild(prompt); }\n      prompt.textContent = String(args[0] ?? "");\n      return null;\n    }
     if (name === "screen") {
       if (!runtimeCanvas || !runtimeContext) throw new Error("The game screen is not available. Press Run again.");
       runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
