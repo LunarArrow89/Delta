@@ -3,20 +3,25 @@ const player = document.getElementById("player");
 
 const keys = new Set();
 const speed = 240;
+const playerSize = 36;
 
 let x = 0;
 let y = 0;
-let previousTime = 0;
+let lastTime = 0;
 
-const movementKeys = new Set([
-  "w", "a", "s", "d",
-  "arrowup", "arrowdown", "arrowleft", "arrowright"
-]);
+function resize() {
+  x = Math.max(0, Math.min(x, window.innerWidth - playerSize));
+  y = Math.max(0, Math.min(y, window.innerHeight - playerSize));
+  draw();
+}
+
+function draw() {
+  player.style.transform = `translate(${x}px, ${y}px)`;
+}
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
-
-  if (movementKeys.has(key)) {
+  if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
     event.preventDefault();
     keys.add(key);
   }
@@ -26,64 +31,47 @@ window.addEventListener("keyup", (event) => {
   keys.delete(event.key.toLowerCase());
 });
 
-window.addEventListener("blur", () => {
-  keys.clear();
+window.addEventListener("blur", () => keys.clear());
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) keys.clear();
 });
 
-function drawPlayer() {
-  player.style.left = x + "px";
-  player.style.top = y + "px";
-}
-
-function resizeGame() {
-  x = Math.max(0, Math.min(x, game.clientWidth - player.offsetWidth));
-  y = Math.max(0, Math.min(y, game.clientHeight - player.offsetHeight));
-  drawPlayer();
-}
-
-function update(time) {
-  if (previousTime === 0) previousTime = time;
-
-  const deltaTime = Math.min((time - previousTime) / 1000, 0.05);
-  previousTime = time;
+function loop(time) {
+  if (!lastTime) lastTime = time;
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
 
   let dx = 0;
   let dy = 0;
 
-  if (keys.has("w") || keys.has("arrowup")) dy -= 1;
-  if (keys.has("s") || keys.has("arrowdown")) dy += 1;
-  if (keys.has("a") || keys.has("arrowleft")) dx -= 1;
-  if (keys.has("d") || keys.has("arrowright")) dx += 1;
+  if (keys.has("a") || keys.has("arrowleft")) dx--;
+  if (keys.has("d") || keys.has("arrowright")) dx++;
+  if (keys.has("w") || keys.has("arrowup")) dy--;
+  if (keys.has("s") || keys.has("arrowdown")) dy++;
 
-  if (dx !== 0 && dy !== 0) {
+  if (dx && dy) {
     dx *= Math.SQRT1_2;
     dy *= Math.SQRT1_2;
   }
 
-  x += dx * speed * deltaTime;
-  y += dy * speed * deltaTime;
+  x += dx * speed * dt;
+  y += dy * speed * dt;
 
-  const width = game.clientWidth;
-  const height = game.clientHeight;
-  const size = player.offsetWidth;
+  if (x > window.innerWidth) x = -playerSize;
+  if (x < -playerSize) x = window.innerWidth;
+  if (y > window.innerHeight) y = -playerSize;
+  if (y < -playerSize) y = window.innerHeight;
 
-  // Walk completely off one edge to appear on the opposite edge.
-  if (x + size < 0) x = width;
-  else if (x > width) x = -size;
-
-  if (y + size < 0) y = height;
-  else if (y > height) y = -size;
-
-  drawPlayer();
-  requestAnimationFrame(update);
+  draw();
+  requestAnimationFrame(loop);
 }
 
-function startGame() {
-  x = (game.clientWidth - player.offsetWidth) / 2;
-  y = (game.clientHeight - player.offsetHeight) / 2;
-  drawPlayer();
-  requestAnimationFrame(update);
+function start() {
+  x = (window.innerWidth - playerSize) / 2;
+  y = (window.innerHeight - playerSize) / 2;
+  draw();
+  requestAnimationFrame(loop);
 }
 
-window.addEventListener("resize", resizeGame);
-startGame();
+window.addEventListener("resize", resize);
+start();
