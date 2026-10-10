@@ -363,3 +363,25 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   .file-list { padding: 6px; }
   .file-item { width: auto; padding: 8px 9px; }
 }
+
+
+/* Delta file rows and delete controls */
+.file-row { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.file-row .file-item { flex: 1; min-width: 0; }
+.delete-file-button {
+  flex: 0 0 27px;
+  width: 27px;
+  height: 29px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #9299aa;
+  font-size: 19px;
+  line-height: 1;
+}
+.delete-file-button:hover { color: #ff929d; background: #3a252d; border-color: #68404b; }
+@media (max-width: 700px) {
+  .file-row { width: 100%; }
+  .file-row .file-item { width: auto; }
+}
