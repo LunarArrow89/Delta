@@ -632,18 +632,6 @@ function runCode() {
           .replace(/\/([A-Za-z_][A-Za-z0-9_]*)\//g, (_, name) => "String(" + name + ")");
         return indent + "centerText(" + expression + ")";
       })
-      .replace(/^([ \t]*)text:\((.*?)\)[ \t]*$/gm, (_, indent, inside) => {
-        const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
-        let expression = "";
-        parts.forEach((part, index) => {
-          if (index % 2 === 0) {
-            if (part) expression += (expression ? " + " : "") + JSON.stringify(part);
-          } else {
-            expression += (expression ? " + " : "") + "String(" + part + ")";
-          }
-        });
-        return indent + "centerText(" + (expression || '""') + ")";
-      })
       .replace(/^([ \t]*)text:(.*):[ \t]*$/gm, (_, indent, value) => indent + "centerText(" + JSON.stringify(value) + ")");
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
