@@ -53,9 +53,9 @@ function renderHighlights() {
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
     while (code.length) {
-      const askParen = code.match(/^(\\s*ask\\s*\\()(.*)(\\)\\s*;?\\s*)$/);
+      const askParen = code.match(/^(\s*ask\s*\()(.*)(\)\s*;?\s*)$/);
       if (askParen) {
-        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
+        const declared = new Set(Array.from(editor.value.matchAll(/\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
         const inner = askParen[2];
         let askContent = "";
         let remaining = inner;
