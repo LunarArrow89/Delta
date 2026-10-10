@@ -462,6 +462,7 @@ function runCode() {
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
     runStatus.textContent = "Finished";
   } catch (error) {
+    if (error?.deltaWaitingForKey) { error.resume(); return; }
     addOutput("Error: " + error.message, "error");
     runStatus.textContent = "Error";
   }
