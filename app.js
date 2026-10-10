@@ -1,4 +1,5 @@
 const player = document.getElementById("player");
+const game = document.getElementById("game");
 const keys = new Set();
 const speed = 300;
 const size = 36;
@@ -8,20 +9,25 @@ let y = 0;
 let lastTime = 0;
 
 function draw() {
-  player.style.left = x + "px";
-  player.style.top = y + "px";
+  // Use transforms so Chrome can move the square without relaying out the page.
+  player.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 }
 
 function start() {
-  x = (window.innerWidth - size) / 2;
-  y = (window.innerHeight - size) / 2;
+  const bounds = game.getBoundingClientRect();
+  x = Math.max(0, (bounds.width - size) / 2);
+  y = Math.max(0, (bounds.height - size) / 2);
   draw();
 }
 
+const movementKeys = new Set([
+  "w", "a", "s", "d",
+  "arrowup", "arrowdown", "arrowleft", "arrowright"
+]);
+
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
-
-  if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
+  if (movementKeys.has(key)) {
     event.preventDefault();
     keys.add(key);
   }
@@ -34,11 +40,12 @@ window.addEventListener("keyup", (event) => {
 window.addEventListener("blur", () => keys.clear());
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) keys.clear();
+  keys.clear();
+  lastTime = 0;
 });
 
 function loop(time) {
-  const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0;
+  const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.1) : 0;
   lastTime = time;
 
   let dx = 0;
@@ -54,12 +61,9 @@ function loop(time) {
     dy *= Math.SQRT1_2;
   }
 
-  x += dx * speed * dt;
-  y += dy * speed * dt;
-
-  // Keep the character visible inside the screen.
-  x = Math.max(0, Math.min(x, window.innerWidth - size));
-  y = Math.max(0, Math.min(y, window.innerHeight - size));
+  const bounds = game.getBoundingClientRect();
+  x = Math.max(0, Math.min(x + dx * speed * dt, bounds.width - size));
+  y = Math.max(0, Math.min(y + dy * speed * dt, bounds.height - size));
 
   draw();
   requestAnimationFrame(loop);
