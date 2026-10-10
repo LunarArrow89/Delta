@@ -561,16 +561,17 @@ class DeltaParser {
     if (name === "square" || name === "moveSquare") {
       const moving = name === "moveSquare";
       const legacy = typeof args[0] === "number";
+      const configured = moving && args.length >= 6 && typeof args[3] === "string";
       const legacySpeed = legacy && typeof args[3] === "number";
       const shape = {
         type:"square",
         x:legacy?(Number(args[0])||0):runtimeSquareSettings.x,
         y:legacy?(Number(args[1])||0):runtimeSquareSettings.y,
         size:legacy?Math.max(0,Number(args[2])||0):runtimeSquareSettings.size,
-        color:String(args[legacySpeed?5:legacy?3:1]??"#ffffff"),
+        color:String(configured?args[3]:args[legacySpeed?5:legacy?3:1]??"#ffffff"),
         moving,
-        speed:moving?(legacySpeed?Math.max(0,Number(args[3])||3.5):(runtimeSquareSettings.speed??3.5)):0,
-        controls:moving?parseMovementControls(legacy?(legacySpeed?args[4]:args[4]):args[0]):defaultMovementControls()
+        speed:moving?(configured?Math.max(0,Number(args[4])||3.5):(legacySpeed?Math.max(0,Number(args[3])||3.5):(runtimeSquareSettings.speed??3.5))):0,
+        controls:moving?parseMovementControls(configured?args[5]:(legacy?args[4]:args[0])):defaultMovementControls()
       };
       runtimeScene.push(shape);
       if(moving)startRuntimeMovement(); drawRuntimeScene(); return null;
@@ -585,8 +586,8 @@ class DeltaParser {
       runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true,speed:Math.max(0,Number(args[4])||3.5),controls:parseMovementControls(args[5])});
       startRuntimeMovement(); drawRuntimeScene(); return null;
     }
-    if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff")}); drawRuntimeScene(); return null; }
-    if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff")}); drawRuntimeScene(); return null; }
+    if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
+    if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "text") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
     throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, text, or clear.');
@@ -620,6 +621,7 @@ function drawRuntimeScene() {
     if(s.type==="square")runtimeContext.fillRect(s.x,s.y,s.size,s.size);
     else if(s.type==="rect")runtimeContext.fillRect(s.x,s.y,s.width,s.height);
     else if(s.type==="circle"){runtimeContext.beginPath();runtimeContext.arc(s.x,s.y,s.radius,0,Math.PI*2);runtimeContext.fill();}
+    else if(s.type==="triangle"){runtimeContext.beginPath();runtimeContext.moveTo(s.x+s.size/2,s.y);runtimeContext.lineTo(s.x+s.size,s.y+s.size);runtimeContext.lineTo(s.x,s.y+s.size);runtimeContext.closePath();runtimeContext.fill();}
     else if(s.type==="text"){runtimeContext.font=s.size+"px system-ui,sans-serif";runtimeContext.fillText(s.value,s.x,s.y);}
     else if(s.type==="centerText"){runtimeContext.font="28px system-ui,sans-serif";runtimeContext.textAlign="center";runtimeContext.textBaseline="middle";runtimeContext.fillText(s.value,runtimeCanvas.width/2,runtimeCanvas.height/2);runtimeContext.textAlign="start";runtimeContext.textBaseline="alphabetic";}
   }
@@ -679,20 +681,36 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      .replace(/^([ \t]*)square\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, body) => {
-        const lines = body.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-        const statements = [];
-        let movement = null;
-        for (const line of lines) {
-          const match = line.match(/^(location|size|speed|movement)\s*\((.*)\)\s*$/);
-          if (!match) throw new Error("Unknown square setting: " + line);
-          if (match[1] === "location") statements.push("setSquareLocation(" + match[2] + ")");
-          else if (match[1] === "size") statements.push("setSquareSize(" + match[2] + ")");
-          else if (match[1] === "speed") statements.push("setSquareSpeed(" + match[2] + ")");
-          else movement = match[2];
+      .replace(/^([ \t]*)(square|rect|circle|triangle)\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, type, body) => {
+        const settings = {};
+        for (const line of body.split(/\r?\n/).map(line => line.trim()).filter(Boolean)) {
+          const match = line.match(/^(location|size|width|height|radius|color|speed|movement)\s*\((.*)\)\s*$/);
+          if (!match) throw new Error("Unknown " + type + " setting: " + line);
+          settings[match[1]] = match[2];
         }
-        statements.push(movement === null ? "square()" : "moveSquare(" + movement + ")");
-        return indent + statements.join("\n" + indent);
+        const loc = settings.location ? settings.location.split(",").map(v=>v.trim()) : ["100","100"];
+        const color = settings.color ?? '"#ffffff"';
+        const movement = settings.movement;
+        if (type === "square") {
+          const size = settings.size ?? "40";
+          const args = [loc[0]||"100",loc[1]||"100",size,color];
+          if (movement !== undefined) return indent + "moveSquare(" + args.join(",") + "," + (settings.speed ?? "3.5") + "," + movement + ")";
+          return indent + "square(" + args.join(",") + ")";
+        }
+        if (type === "rect") {
+          const width = settings.width ?? settings.size ?? "60", height = settings.height ?? settings.size ?? "40";
+          const args = [loc[0]||"100",loc[1]||"100",width,height,color];
+          if (movement !== undefined) return indent + "moveRect(" + args.join(",") + "," + (settings.speed ?? "3.5") + "," + movement + ")";
+          return indent + "rect(" + args.join(",") + ")";
+        }
+        if (type === "circle") {
+          const radius = settings.radius ?? settings.size ?? "20";
+          const args = [loc[0]||"100",loc[1]||"100",radius,color];
+          if (movement !== undefined) return indent + "moveCircle(" + args.join(",") + "," + (settings.speed ?? "3.5") + "," + movement + ")";
+          return indent + "circle(" + args.join(",") + ")";
+        }
+        const size = settings.size ?? "40";
+        return indent + "triangle(" + [loc[0]||"100",loc[1]||"100",size,color,(settings.speed??"3.5"),movement===undefined?"null":movement].join(",") + ")";
       })
       .replace(/^([ \t]*)square\s*\*size\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSize(" + args + ")")      .replace(/^([ \t]*)square\s*\*location\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareLocation(" + args + ")")
       .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
