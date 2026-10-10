@@ -46,7 +46,7 @@ function renderHighlights() {
   if (!layer) return;
   const reserved = new Set(["let", "var", "if", "then", "else", "true", "false", "null", "and", "or", "not"]);
   const controlKeywords = new Set(["if", "then", "else"]);
-  const builtins = new Set(["screen", "background", "square", "rect", "circle", "clear"]);
+  const builtins = new Set(["screen", "background", "square", "rect", "circle", "clear", "ask", "gather"]);
   const html = editor.value.split("\n").map(line => {
     const commentAt = line.indexOf("//");
     let code = commentAt >= 0 ? line.slice(0, commentAt) : line;
@@ -55,7 +55,11 @@ function renderHighlights() {
     while (code.length) {
       const textShortcut = code.match(/^text:(.*):$/);
       if (textShortcut) {
-        out += '<span class="syntax-text-command">text:</span><span class="syntax-text-content">' + escapeHighlight(textShortcut[1]) + '</span><span class="syntax-text-command">:</span>';
+        const inner = textShortcut[1];
+        const joined = inner.match(/^(.*?):\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):\\s*$/);
+        out += '<span class="syntax-text-content">text:' + escapeHighlight(joined ? joined[1] : inner);
+        if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';
+        out += ':</span>';
         code = "";
         continue;
       }
