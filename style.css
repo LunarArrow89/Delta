@@ -271,3 +271,6 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 #highlightLayer .syntax-keyword { color: #ffad5c !important; }
 #highlightLayer .syntax-comment { color: #737b8d !important; font-style: italic; }
 #codeEditor { color: transparent !important; -webkit-text-fill-color: transparent !important; }
+
+/* Purple interaction commands */
+.syntax-purple, #highlightLayer .syntax-purple { color: #c792ea !important; }
