@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17191f">
   <title>Delta — Tiny Game Engine</title>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
   <header class="topbar">
@@ -21,6 +21,15 @@
 
 
   <main class="workspace" id="workspace">
+    <aside class="files-panel" aria-label="Project files">
+      <div class="files-heading"><span>FILES</span><button id="addFileButton" type="button" aria-label="Add file" title="Add file">+</button></div>
+      <div id="fileList" class="file-list">
+        <button class="file-item active" type="button" data-file="main.delta"><span class="file-icon delta-icon">◆</span> main.delta</button>
+        <button class="file-item" type="button" data-file="style.css"><span class="file-icon css-icon">#</span> style.css</button>
+        <button class="file-item" type="button" data-file="app.js"><span class="file-icon js-icon">JS</span> app.js</button>
+      </div>
+      <p class="files-note">File connections coming soon</p>
+    </aside>
     <section class="editor-panel">
       <div class="panel-heading">
         <div><span class="status-dot"></span> <span>main.delta</span></div>
@@ -44,6 +53,6 @@
     </section>
 
   </main>
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
