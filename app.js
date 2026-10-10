@@ -61,15 +61,13 @@ function renderHighlights() {
   const layer = document.getElementById("highlightLayer");
   if (!layer) return;
 
-  // Highlighting must never insert, remove, or reorder source characters.
-  // Build the visible layer from the exact editor text, escaping every raw
-  // character before adding only color spans around existing text.
+  // Highlight only the display layer; never modify the user's actual code.
   const html = editor.value.split("\n").map(line => {
     const commentAt = line.indexOf("//");
     const code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
-    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'/g;
+    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
     let lastIndex = 0;
     let match;
     while ((match = pattern.exec(code)) !== null) {
@@ -78,6 +76,10 @@ function renderHighlights() {
         out += '<span class="syntax-text-content">' + escapeHighlight(match[0]) + '</span>';
       } else if (match[2] !== undefined) {
         out += '<span class="syntax-variable">' + escapeHighlight(match[0]) + '</span>';
+      } else if (match[3] !== undefined) {
+        out += '<span class="syntax-keyword">' + escapeHighlight(match[3]) + '</span>';
+        out += escapeHighlight(match[4] || "");
+        if (match[5]) out += '<span class="syntax-variable-name">' + escapeHighlight(match[5]) + '</span>';
       } else {
         out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
       }
