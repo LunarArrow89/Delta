@@ -330,15 +330,16 @@ class DeltaParser {
   }
   callBuiltin(name, args) {
     if (name === "screen") {
+      if (!runtimeCanvas || !runtimeContext) throw new Error("Click Run to open the program window first.");
       runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
       runtimeCanvas.height = Math.max(100, Math.min(1200, Number(args[1]) || 400)); return null;
     }
-    if (name === "background") { runtimeContext.fillStyle = String(args[0] ?? "#ffffff"); runtimeContext.fillRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
-    if (name === "square") { runtimeContext.fillStyle = String(args[3] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[2]) || 0)); return null; }
-    if (name === "rect") { runtimeContext.fillStyle = String(args[4] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[3]) || 0)); return null; }
-    if (name === "circle") { runtimeContext.beginPath(); runtimeContext.fillStyle = String(args[3] ?? "#72e0b1"); runtimeContext.arc(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), 0, Math.PI * 2); runtimeContext.fill(); return null; }
-    if (name === "text") { runtimeContext.fillStyle = String(args[3] ?? "#ffffff"); runtimeContext.font = Math.max(8, Number(args[4]) || 24) + "px system-ui, sans-serif"; runtimeContext.fillText(String(args[0] ?? ""), Number(args[1]) || 0, Number(args[2]) || 0); return null; }
-    if (name === "clear") { runtimeContext.clearRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
+    if (name === "background") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[0] ?? "#ffffff"); runtimeContext.fillRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
+    if (name === "square") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[3] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[2]) || 0)); return null; }
+    if (name === "rect") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[4] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[3]) || 0)); return null; }
+    if (name === "circle") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.beginPath(); runtimeContext.fillStyle = String(args[3] ?? "#72e0b1"); runtimeContext.arc(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), 0, Math.PI * 2); runtimeContext.fill(); return null; }
+    if (name === "text") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[3] ?? "#ffffff"); runtimeContext.font = Math.max(8, Number(args[4]) || 24) + "px system-ui, sans-serif"; runtimeContext.fillText(String(args[0] ?? ""), Number(args[1]) || 0, Number(args[2]) || 0); return null; }
+    if (name === "clear") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.clearRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
     throw new Error('Unknown function "' + name + '". Use screen, background, square, rect, circle, text, or clear.');
   }
   truthy(value) { return Boolean(value); }
@@ -377,17 +378,17 @@ function openRuntimeWindow() {
 function runCode() {
   output.replaceChildren();
   runStatus.textContent = "Running…";
-  if (!openRuntimeWindow()) return;
+  openRuntimeWindow();
   const started = performance.now();
   try {
     const parser = new DeltaParser(tokenize(editor.value), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
-    runtimeWindow.document.getElementById("state").textContent = "Finished";
+    if (runtimeWindow && !runtimeWindow.closed) runtimeWindow.document.getElementById("state").textContent = "Finished";
     runStatus.textContent = "Finished";
   } catch (error) {
     addOutput("Error: " + error.message, "error");
-    runtimeWindow.document.getElementById("state").textContent = "Error";
+    if (runtimeWindow && !runtimeWindow.closed) runtimeWindow.document.getElementById("state").textContent = "Error";
     runStatus.textContent = "Error";
   }
 }
