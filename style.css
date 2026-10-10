@@ -432,3 +432,27 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   -webkit-text-fill-color: transparent !important;
   caret-color: var(--green) !important;
 }
+
+
+/* Keep the visible syntax layer and the real textarea's caret on the same character grid. */
+#highlightLayer,
+#codeEditor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-indent: 0 !important;
+  text-transform: none !important;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  tab-size: 2 !important;
+}
+#highlightLayer {
+  padding: 17px 16px 22px !important;
+}
+#codeEditor {
+  padding: 17px 16px 22px !important;
+}
