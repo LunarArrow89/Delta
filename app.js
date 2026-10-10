@@ -546,6 +546,11 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
+      // Allow simple one-line indented-style conditions without requiring braces.
+      .replace(/^([ \t]*)if(\d*)\s+(.+?)\s*\r?\n([ \t]*)([^\r\n]+)$/gm, (whole, indent, number, condition, nextIndent, nextLine) => {
+        if (condition.includes("{") || nextLine.trim().startsWith("else")) return whole;
+        return indent + "if" + number + " " + condition.trim() + " {\n" + nextIndent + nextLine + "\n" + indent + "}";
+      })
       .replace(/^([ \t]*)(square|rect|circle|triangle)\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, type, body) => {
         const settings = {};
         for (const line of body.split(/\r?\n/).map(line => line.trim()).filter(Boolean)) {
