@@ -262,3 +262,12 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 @media (min-width: 1100px) {
   .workspace.tutorial-mode .help-content { display: grid; }
 }
+
+/* Keep syntax colors visible through the editable text layer. */
+#highlightLayer .syntax-variable { color: #ffd866 !important; }
+#highlightLayer .syntax-text-command { color: #ff6b6b !important; }
+#highlightLayer .syntax-text-content,
+#highlightLayer .syntax-string { color: #72e0b1 !important; }
+#highlightLayer .syntax-keyword { color: #ffad5c !important; }
+#highlightLayer .syntax-comment { color: #737b8d !important; font-style: italic; }
+#codeEditor { color: transparent !important; -webkit-text-fill-color: transparent !important; }
