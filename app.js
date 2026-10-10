@@ -135,9 +135,23 @@ function renderHighlights() {
         code = "";
         continue;
       }
-      const textColonParen = code.match(/^(\s*)text\(:([\s\S]*?):\)$/);
+      const textColonParen = code.match(/^(\s*)text\(:([\s\S]*)\)$/);
       if (textColonParen) {
-        out += escapeHighlight(textColonParen[1]) + '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span><span class="syntax-text-content">:' + escapeHighlight(textColonParen[2]) + ':</span><span class="syntax-parenthesis">)</span>';
+        const inner = textColonParen[2];
+        const declared = new Set(Array.from(editor.value.matchAll(/\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
+        out += escapeHighlight(textColonParen[1]) + '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span>';
+        let remaining = ':' + inner;
+        const variablePattern = /\/([A-Za-z_][A-Za-z0-9_]*)\//g;
+        let lastIndex = 0;
+        let match;
+        while ((match = variablePattern.exec(remaining)) !== null) {
+          out += '<span class="syntax-text-content">' + escapeHighlight(remaining.slice(lastIndex, match.index)) + '</span>';
+          out += declared.has(match[1])
+            ? '<span class="syntax-variable">/' + escapeHighlight(match[1]) + '/</span>'
+            : '<span class="syntax-text-content">/' + escapeHighlight(match[1]) + '/</span>';
+          lastIndex = match.index + match[0].length;
+        }
+        out += '<span class="syntax-text-content">' + escapeHighlight(remaining.slice(lastIndex)) + '</span><span class="syntax-parenthesis">)</span>';
         code = "";
         continue;
       }
