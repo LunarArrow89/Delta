@@ -58,7 +58,7 @@ function renderHighlights() {
         code = "";
         continue;
       }
-      const quote = code.match(/^(["'])(?:\\\\.|(?!\\1)[^\\\\])*?\\1/);
+      const quote = code.match(/^(["'])(?:\\.|(?!\1)[^\\])*?\1/);
       if (quote) {
         out += '<span class="syntax-string">' + escapeHighlight(quote[0]) + '</span>';
         code = code.slice(quote[0].length);
@@ -68,7 +68,7 @@ function renderHighlights() {
       if (word) {
         const name = word[0];
         const rest = code.slice(name.length);
-        if (name === "text" && /^\\s*\\(/.test(rest)) {
+        if (name === "text" && /^\s*\(/.test(rest)) {
           out += '<span class="syntax-text-command">' + name + '</span>';
         } else if (reserved.has(name) || builtins.has(name)) {
           out += escapeHighlight(name);
