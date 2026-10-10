@@ -135,6 +135,12 @@ function renderHighlights() {
         code = "";
         continue;
       }
+      const textColonParen = code.match(/^(\s*)text\(:([\s\S]*?):\)$/);
+      if (textColonParen) {
+        out += escapeHighlight(textColonParen[1]) + '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span><span class="syntax-text-content">:' + escapeHighlight(textColonParen[2]) + ':</span><span class="syntax-parenthesis">)</span>';
+        code = "";
+        continue;
+      }
       const textParen = code.match(/^text:\((.*)\)$/);
       if (textParen) {
         const joined = textParen[1].match(/^(.*?)(\s*:\s*\+\s*:\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*:)$/);
