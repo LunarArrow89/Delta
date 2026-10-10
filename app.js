@@ -451,6 +451,7 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
+      .replace(/^([ \t]*)ask:(.*):[ \t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
       .replace(/^([ \t]*)text:\((.*?)\)[ \t]*$/gm, (_, indent, inside) => {
         const joined = inside.match(/^(.*?)\s*:\s*\+\s*:([A-Za-z_][A-Za-z0-9_]*):\s*$/);
         if (joined) return indent + "centerText(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
