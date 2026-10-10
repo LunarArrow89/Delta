@@ -202,7 +202,7 @@ function renderHighlights() {
           out += '<span class="syntax-purple">' + escapeHighlight(name) + '</span>';
         } else if (name === "text" && /^\s*\(/.test(rest)) {
           out += '<span class="syntax-text-command">' + name + '</span>';
-        } else if (controlKeywords.has(name) || /^if\\d+$/.test(name)) {
+        } else if (controlKeywords.has(name) || /^if\d+$/.test(name)) {
           out += '<span class="syntax-keyword">' + escapeHighlight(name) + '</span>';
         } else if (reserved.has(name) || builtins.has(name)) {
           out += escapeHighlight(name);
@@ -388,7 +388,7 @@ class DeltaParser {
       this.print(value);
       return;
     }
-    if (this.current().type === "word" && /^if\\d*$/.test(this.current().value)) {
+    if (this.current().type === "word" && /^if\d*$/.test(this.current().value)) {
       this.index++;
       const condition = this.expression();
       this.expect("{");
