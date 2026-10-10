@@ -195,6 +195,12 @@ function renderHighlights() {
         code = code.slice(quote[0].length);
         continue;
       }
+      const tag = code.match(/^\*([A-Za-z_][A-Za-z0-9_]*)\*/);
+      if (tag) {
+        out += '<span class="syntax-tag">' + escapeHighlight(tag[0]) + '</span>';
+        code = code.slice(tag[0].length);
+        continue;
+      }
       const word = code.match(/^[A-Za-z_][A-Za-z0-9_]*/);
       if (word) {
         const name = word[0];
