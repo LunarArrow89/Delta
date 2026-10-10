@@ -615,7 +615,7 @@ function runCode() {
         return indent + "ask(" + JSON.stringify(inside) + ")";
       })
       .replace(/^([ \\t]*)ask:(.*):[ \\t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
-      .replace(/^([ \t]*)text\((:[\s\S]*?)\)[ \t]*$/gm, (_, indent, inside) => {
+      .replace(/^([ \t]*)text\((.*)\)[ \t]*$/gm, (_, indent, inside) => {
         const expression = inside
           .replace(/:([^:]*):/g, (_, message) => JSON.stringify(message))
           .replace(/\/([A-Za-z_][A-Za-z0-9_]*)\//g, (_, name) => "String(" + name + ")");
