@@ -228,3 +228,37 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .syntax-comment { color: #737b8d; font-style: italic; }
 
 .syntax-keyword { color: #ffad5c; }
+
+
+/* Code / Tutorial view tabs */
+.view-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--border);
+  background: #1d2027;
+}
+.view-tab {
+  padding: 10px 18px;
+  border-radius: 8px 8px 0 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 0;
+}
+.view-tab:hover { color: var(--text); background: #252934; }
+.view-tab.active {
+  color: var(--text);
+  background: var(--panel);
+  border-color: var(--border);
+}
+.workspace.tutorial-mode {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.workspace.tutorial-mode .editor-panel,
+.workspace.tutorial-mode .output-panel { display: none; }
+.workspace.tutorial-mode .help-panel { display: block; grid-column: 1; }
+@media (min-width: 1100px) {
+  .workspace.tutorial-mode .help-content { display: grid; }
+}
