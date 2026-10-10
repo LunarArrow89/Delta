@@ -274,3 +274,6 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 
 /* Purple interaction commands */
 .syntax-purple, #highlightLayer .syntax-purple { color: #c792ea !important; }
+
+/* Keep parentheses white in text:(...) shortcuts. */
+.syntax-parenthesis, #highlightLayer .syntax-parenthesis { color: #e6e1ff !important; }
