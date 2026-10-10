@@ -392,8 +392,12 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      .replace(/^([ \\t]*)text:(.*?)\\s*:\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):[ \\t]*$/gm, (_, indent, label, variable) => indent + "centerText(" + JSON.stringify(label) + " + String(" + variable + "))")
-      .replace(/^([ \\t]*)text:(.*):[ \\t]*$/gm, (_, indent, value) => indent + "centerText(" + JSON.stringify(value) + ")");
+      .replace(/^([ \t]*)text:\((.*?)\)[ \t]*$/gm, (_, indent, inside) => {
+        const joined = inside.match(/^(.*?)\s*:\s*\+\s*:([A-Za-z_][A-Za-z0-9_]*):\s*$/);
+        if (joined) return indent + "centerText(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
+        return indent + "centerText(" + JSON.stringify(inside) + ")";
+      })
+      .replace(/^([ \t]*)text:(.*):[ \t]*$/gm, (_, indent, value) => indent + "centerText(" + JSON.stringify(value) + ")");
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
