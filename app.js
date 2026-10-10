@@ -8,6 +8,7 @@ const projectName = document.getElementById("projectName");
 const projectSelect = document.getElementById("projectSelect");
 const saveStatus = document.getElementById("saveStatus");
 let runtimeWindow = null, runtimeCanvas = null, runtimeContext = null, runtimeLog = null;
+let runtimeScene = [], runtimeBackground = "#000000", runtimeHeldKeys = new Set(), runtimeMovementStarted = false, runtimeLastFrame = 0;
 const PROJECTS_KEY = "delta-projects";
 function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY) || "{}"); } catch { return {}; } }
 function refreshProjects(selected = "") {
@@ -541,33 +542,18 @@ class DeltaParser {
     if (name === "ask") {
       if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before asking for a key.");
       let prompt = runtimeWindow.document.getElementById("delta-ask-prompt");
-      if (!prompt) { prompt = runtimeWindow.document.createElement("div"); prompt.id = "delta-ask-prompt"; prompt.style.cssText = "position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:90vw;padding:14px 20px;border-radius:12px;background:#24202e;color:#e8d8ff;border:1px solid #a879d8;font:16px system-ui,sans-serif;text-align:center;z-index:9999;box-shadow:0 6px 24px #0008"; runtimeWindow.document.body.appendChild(prompt); }
-      prompt.textContent = String(args[0] ?? "");
-      return null;
+      if (!prompt) { prompt = runtimeWindow.document.createElement("div"); prompt.id = "delta-ask-prompt"; prompt.style.cssText = "position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:90vw;padding:14px 20px;border-radius:12px;background:#24202e;color:#e8d8ff;border:1px solid #a879d8;font:16px system-ui,sans-serif;text-align:center;z-index:9999"; runtimeWindow.document.body.appendChild(prompt); }
+      prompt.textContent = String(args[0] ?? ""); return null;
     }
-    if (name === "screen") {
-      if (!runtimeCanvas || !runtimeContext) throw new Error("The game screen is not available. Press Run again.");
-      runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
-      runtimeCanvas.height = Math.max(100, Math.min(1200, Number(args[1]) || 400)); return null;
-    }
-    if (name === "centerText") {
-      if (!runtimeContext || !runtimeCanvas) throw new Error("The game screen is not available. Press Run again.");
-      runtimeContext.fillStyle = "#ffffff";
-      runtimeContext.font = "28px system-ui, sans-serif";
-      runtimeContext.textAlign = "center";
-      runtimeContext.textBaseline = "middle";
-      runtimeContext.fillText(String(args[0] ?? ""), runtimeCanvas.width / 2, runtimeCanvas.height / 2);
-      runtimeContext.textAlign = "start";
-      runtimeContext.textBaseline = "alphabetic";
-      return null;
-    }
-    if (name === "background") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[0] ?? "#ffffff"); runtimeContext.fillRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
-    if (name === "square") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[3] ?? "#ffffff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[2]) || 0)); return null; }
-    if (name === "rect") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[4] ?? "#ffffff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[3]) || 0)); return null; }
-    if (name === "circle") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.beginPath(); runtimeContext.fillStyle = String(args[3] ?? "#ffffff"); runtimeContext.arc(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), 0, Math.PI * 2); runtimeContext.fill(); return null; }
-    if (name === "text") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.fillStyle = String(args[3] ?? "#ffffff"); runtimeContext.font = Math.max(8, Number(args[4]) || 24) + "px system-ui, sans-serif"; runtimeContext.fillText(String(args[0] ?? ""), Number(args[1]) || 0, Number(args[2]) || 0); return null; }
-    if (name === "clear") { if (!runtimeContext) throw new Error("The program window is not available. Allow pop-ups and press Run again."); runtimeContext.clearRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
-    throw new Error('Unknown function "' + name + '". Use screen, background, style, square, rect, circle, text, or clear.');
+    if (name === "screen") { if (!runtimeCanvas) throw new Error("The game screen is not available. Press Run again."); runtimeCanvas.width=Math.max(100,Math.min(1600,Number(args[0])||640)); runtimeCanvas.height=Math.max(100,Math.min(1200,Number(args[1])||400)); drawRuntimeScene(); return null; }
+    if (name === "background") { runtimeBackground=String(args[0]??"#ffffff"); runtimeScene=[]; drawRuntimeScene(); return null; }
+    if (name === "centerText") { runtimeScene.push({type:"centerText",value:String(args[0]??"")}); drawRuntimeScene(); return null; }
+    if (name === "square" || name === "moveSquare") { runtimeScene.push({type:"square",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:name==="moveSquare"}); if(name==="moveSquare")startRuntimeMovement(); drawRuntimeScene(); return null; }
+    if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff")}); drawRuntimeScene(); return null; }
+    if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff")}); drawRuntimeScene(); return null; }
+    if (name === "text") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
+    if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
+    throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, text, or clear.');
   }
   truthy(value) { return Boolean(value); }
 }
@@ -591,16 +577,42 @@ function addOutput(text, type = "") {
     runtimeLog.appendChild(row);
   }
 }
-function openRuntimeWindow() {
-  runtimeWindow = window.open("", "DeltaProgramWindow", "popup,width=900,height=650,resizable=yes,scrollbars=yes");
-  if (!runtimeWindow) { addOutput("Allow pop-ups for this site so Delta can open your program in a new window.", "error"); runStatus.textContent = "Popup blocked"; return false; }
-  runtimeWindow.document.open();
-  runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Game</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}canvas{display:block;width:100vw;height:100vh;background:#000}</style></head><body><canvas id="screen" width="640" height="400"></canvas></body></html>');
-  runtimeWindow.document.close();
-  runtimeCanvas = runtimeWindow.document.getElementById("screen");
-  runtimeContext = runtimeCanvas.getContext("2d");
-  runtimeLog = runtimeWindow.document.getElementById("log");
-  return true;
+function drawRuntimeScene() {
+  if(!runtimeCanvas||!runtimeContext)return;
+  runtimeContext.fillStyle=runtimeBackground; runtimeContext.fillRect(0,0,runtimeCanvas.width,runtimeCanvas.height);
+  for(const s of runtimeScene){runtimeContext.fillStyle=s.color||"#ffffff";
+    if(s.type==="square")runtimeContext.fillRect(s.x,s.y,s.size,s.size);
+    else if(s.type==="rect")runtimeContext.fillRect(s.x,s.y,s.width,s.height);
+    else if(s.type==="circle"){runtimeContext.beginPath();runtimeContext.arc(s.x,s.y,s.radius,0,Math.PI*2);runtimeContext.fill();}
+    else if(s.type==="text"){runtimeContext.font=s.size+"px system-ui,sans-serif";runtimeContext.fillText(s.value,s.x,s.y);}
+    else if(s.type==="centerText"){runtimeContext.font="28px system-ui,sans-serif";runtimeContext.textAlign="center";runtimeContext.textBaseline="middle";runtimeContext.fillText(s.value,runtimeCanvas.width/2,runtimeCanvas.height/2);runtimeContext.textAlign="start";runtimeContext.textBaseline="alphabetic";}
+  }
+}
+function startRuntimeMovement(){
+  if(runtimeMovementStarted||!runtimeWindow||runtimeWindow.closed)return;
+  runtimeMovementStarted=true; runtimeHeldKeys=new Set();
+  runtimeWindow.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();runtimeHeldKeys.add(k);});
+  runtimeWindow.addEventListener("keyup",e=>runtimeHeldKeys.delete(e.key.toLowerCase()));
+  runtimeWindow.addEventListener("blur",()=>runtimeHeldKeys.clear());
+  const frame=t=>{
+    if(!runtimeWindow||runtimeWindow.closed||!runtimeCanvas){runtimeMovementStarted=false;return;}
+    const elapsed=runtimeLastFrame?Math.min((t-runtimeLastFrame)/16.67,3):1;runtimeLastFrame=t;
+    let dx=0,dy=0;
+    if(runtimeHeldKeys.has("a")||runtimeHeldKeys.has("arrowleft"))dx--;
+    if(runtimeHeldKeys.has("d")||runtimeHeldKeys.has("arrowright"))dx++;
+    if(runtimeHeldKeys.has("w")||runtimeHeldKeys.has("arrowup"))dy--;
+    if(runtimeHeldKeys.has("s")||runtimeHeldKeys.has("arrowdown"))dy++;
+    if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
+    if(dx||dy){for(const s of runtimeScene)if(s.moving){s.x=Math.max(0,Math.min(runtimeCanvas.width-s.size,s.x+dx*3.5*elapsed));s.y=Math.max(0,Math.min(runtimeCanvas.height-s.size,s.y+dy*3.5*elapsed));}drawRuntimeScene();}
+    runtimeWindow.requestAnimationFrame(frame);
+  };runtimeWindow.requestAnimationFrame(frame);
+}
+function openRuntimeWindow(){
+  runtimeWindow=window.open("","DeltaProgramWindow","popup,width=900,height=650,resizable=yes,scrollbars=yes");
+  if(!runtimeWindow){addOutput("Allow pop-ups for this site so Delta can open your program in a new window.","error");runStatus.textContent="Popup blocked";return false;}
+  runtimeScene=[];runtimeBackground="#000000";runtimeMovementStarted=false;runtimeLastFrame=0;runtimeHeldKeys=new Set();
+  runtimeWindow.document.open();runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Game</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}canvas{display:block;width:100vw;height:100vh;background:#000}</style></head><body><canvas id="screen" width="640" height="400"></canvas></body></html>');runtimeWindow.document.close();
+  runtimeCanvas=runtimeWindow.document.getElementById("screen");runtimeContext=runtimeCanvas.getContext("2d");runtimeLog=null;return true;
 }
 function runCode() {
   output.replaceChildren();
@@ -609,6 +621,7 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
+      .replace(/^([ \t]*)(square|rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "square" ? "moveSquare(" : shape + "("))
       .replace(/^([ \t]*)text:\((.*?)\s*:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\)[ \t]*$/gm, (_, indent, message, name) => indent + "centerText(" + JSON.stringify(message.trimEnd() + " ") + " + String(" + name + "))")
       .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
         const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
