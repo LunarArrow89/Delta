@@ -8,13 +8,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #111;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  user-select: none;
-  -webkit-user-select: none;
+  background: #202020;
 }
 
 #game {
@@ -24,38 +18,12 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background-color: #202020;
-  background-image:
-    linear-gradient(#ffffff08 1px, transparent 1px),
-    linear-gradient(90deg, #ffffff08 1px, transparent 1px);
-  background-size: 40px 40px;
+  background: #202020;
 }
 
 #player {
   position: absolute;
   width: 36px;
   height: 36px;
-  left: 50%;
-  top: 50%;
-  background: #f2f2f2;
-  border: 2px solid #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 0 14px #ffffff35;
-  will-change: left, top;
-}
-
-#controls {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  padding: 10px 14px;
-  color: #ffffff99;
-  background: #00000070;
-  border: 1px solid #ffffff18;
-  border-radius: 8px;
-  font-size: 12px;
-  letter-spacing: 2px;
-  white-space: nowrap;
-  pointer-events: none;
+  background: white;
 }
