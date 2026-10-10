@@ -223,6 +223,10 @@ class DeltaParser {
       this.variables[name] = this.expression();
       return;
     }
+    if (this.current().type === "word" && this.tokens[this.index + 1]?.value === "(") {
+      this.expression();
+      return;
+    }
     throw new Error('Unknown statement "' + this.current().value + '". Try print(...), let name = ..., or if ... { ... }.');
   }
   findBlockEnd(start) {
