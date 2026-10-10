@@ -624,7 +624,7 @@ function runCode() {
       })
       .replace(/^([ \\t]*)ask:(.*):[ \\t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
       .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\s*\)[ \t]*$/gm, (_, indent, message, name) => {
-        return indent + "centerText(" + JSON.stringify(message.trimEnd()) + " + String(" + name + "))";
+        return indent + "centerText(" + JSON.stringify(message) + " + String(" + name + "))";
       })
       .replace(/^([ \t]*)text\((.*)\)[ \t]*$/gm, (_, indent, inside) => {
         const expression = inside
