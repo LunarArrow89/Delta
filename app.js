@@ -645,9 +645,46 @@ document.getElementById("resetButton").addEventListener("click", () => {
 
 
 
-// File sidebar: layout and file creation are ready; editor connections come later.
+// File sidebar actions
 const fileList = document.getElementById("fileList");
 const addFileButton = document.getElementById("addFileButton");
+let fileOptionsMenu = null;
+let fileOptionsTarget = null;
+
+function closeFileOptions() {
+  fileOptionsMenu?.remove();
+  fileOptionsMenu = null;
+  fileOptionsTarget = null;
+}
+function showFileOptions(item, x, y) {
+  closeFileOptions();
+  const row = item.closest(".file-row");
+  if (!row) return;
+  fileOptionsTarget = item;
+  fileOptionsMenu = document.createElement("div");
+  fileOptionsMenu.className = "file-options-menu";
+  fileOptionsMenu.setAttribute("role", "menu");
+  const actions = [
+    { label: "Rename", action: "rename", disabled: item.dataset.file === "main.delta" },
+    { label: "Move up", action: "up", disabled: !row.previousElementSibling },
+    { label: "Move down", action: "down", disabled: !row.nextElementSibling },
+    { label: "Delete", action: "delete", danger: true, disabled: item.dataset.file === "main.delta" }
+  ];
+  actions.forEach(option => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = option.label;
+    button.dataset.action = option.action;
+    button.setAttribute("role", "menuitem");
+    if (option.danger) button.classList.add("danger");
+    button.disabled = !!option.disabled;
+    fileOptionsMenu.appendChild(button);
+  });
+  document.body.appendChild(fileOptionsMenu);
+  const menuRect = fileOptionsMenu.getBoundingClientRect();
+  fileOptionsMenu.style.left = Math.max(8, Math.min(x, window.innerWidth - menuRect.width - 8)) + "px";
+  fileOptionsMenu.style.top = Math.max(8, Math.min(y, window.innerHeight - menuRect.height - 8)) + "px";
+}
 fileList.addEventListener("click", event => {
   const deleteButton = event.target.closest(".delete-file-button");
   if (deleteButton) {
@@ -663,6 +700,58 @@ fileList.addEventListener("click", event => {
   if (!item) return;
   fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
   saveStatus.textContent = item.dataset.file === "main.delta" ? "Editing main.delta" : item.dataset.file + " — file connection coming soon";
+});
+fileList.addEventListener("dblclick", event => {
+  const item = event.target.closest(".file-item");
+  if (!item) return;
+  event.preventDefault();
+  showFileOptions(item, event.clientX, event.clientY);
+});
+fileList.addEventListener("contextmenu", event => {
+  const item = event.target.closest(".file-item");
+  if (!item) return;
+  event.preventDefault();
+  showFileOptions(item, event.clientX, event.clientY);
+});
+document.addEventListener("click", event => {
+  if (fileOptionsMenu && !fileOptionsMenu.contains(event.target)) closeFileOptions();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeFileOptions();
+});
+document.addEventListener("click", event => {
+  const button = event.target.closest(".file-options-menu button");
+  if (!button || button.disabled || !fileOptionsTarget) return;
+  const item = fileOptionsTarget;
+  const row = item.closest(".file-row");
+  if (!row) { closeFileOptions(); return; }
+  const name = item.dataset.file;
+  const action = button.dataset.action;
+  if (action === "delete" && name !== "main.delta") {
+    row.remove();
+    saveStatus.textContent = "Deleted " + name;
+  } else if (action === "rename" && name !== "main.delta") {
+    const requested = window.prompt("Rename Delta file:", name);
+    if (requested !== null) {
+      let nextName = requested.trim();
+      if (nextName && !nextName.toLowerCase().endsWith(".delta")) nextName += ".delta";
+      const exists = Array.from(fileList.querySelectorAll(".file-item")).some(other => other !== item && other.dataset.file.toLowerCase() === nextName.toLowerCase());
+      if (!/^[A-Za-z0-9_-]+\.delta$/i.test(nextName) || exists) {
+        saveStatus.textContent = "Choose a unique valid .delta filename";
+      } else {
+        item.dataset.file = nextName;
+        item.lastChild.textContent = " " + nextName;
+        saveStatus.textContent = "Renamed to " + nextName;
+      }
+    }
+  } else if (action === "up" && row.previousElementSibling) {
+    fileList.insertBefore(row, row.previousElementSibling);
+    saveStatus.textContent = "Moved " + name + " up";
+  } else if (action === "down" && row.nextElementSibling) {
+    fileList.insertBefore(row.nextElementSibling, row);
+    saveStatus.textContent = "Moved " + name + " down";
+  }
+  closeFileOptions();
 });
 addFileButton.addEventListener("click", () => {
   const requestedName = window.prompt("New Delta file name (.delta):", "new-file.delta");
