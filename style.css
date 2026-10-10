@@ -456,3 +456,50 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 #codeEditor {
   padding: 17px 16px 22px !important;
 }
+
+
+/* Keep the visible syntax layer exactly aligned with the editable textarea. */
+.editor-wrap {
+  position: relative;
+  isolation: isolate;
+}
+#highlightLayer {
+  left: 42px !important;
+  right: 0 !important;
+  width: auto !important;
+  height: 100%;
+  overflow: hidden !important;
+  white-space: pre !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  pointer-events: none !important;
+}
+#highlightLayer,
+#highlightLayer span,
+#codeEditor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-indent: 0 !important;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  font-feature-settings: "liga" 0, "clig" 0 !important;
+  tab-size: 2 !important;
+}
+#highlightLayer span {
+  white-space: inherit !important;
+}
+#codeEditor {
+  box-sizing: border-box !important;
+  padding: 17px 16px 22px !important;
+  overflow: auto !important;
+  white-space: pre !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  position: relative;
+  z-index: 1;
+}
