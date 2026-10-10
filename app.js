@@ -537,3 +537,41 @@ document.getElementById("resetButton").addEventListener("click", () => {
   editor.focus();
 });
 
+
+
+// File sidebar: layout and file creation are ready; editor connections come later.
+const fileList = document.getElementById("fileList");
+const addFileButton = document.getElementById("addFileButton");
+fileList.addEventListener("click", event => {
+  const item = event.target.closest(".file-item");
+  if (!item) return;
+  fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
+  if (item.dataset.file !== "main.delta") {
+    saveStatus.textContent = item.dataset.file + " — file connection coming soon";
+  } else {
+    saveStatus.textContent = "Editing main.delta";
+  }
+});
+addFileButton.addEventListener("click", () => {
+  const requestedName = window.prompt("New file name (include its extension):", "new-file.delta");
+  if (requestedName === null) return;
+  const name = requestedName.trim();
+  if (!name) return;
+  const existing = Array.from(fileList.querySelectorAll(".file-item")).some(item => item.dataset.file.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    saveStatus.textContent = "That file already exists in the list";
+    return;
+  }
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "file-item";
+  item.dataset.file = name;
+  const icon = document.createElement("span");
+  icon.className = "file-icon";
+  icon.textContent = name.endsWith(".css") ? "#" : name.endsWith(".js") ? "JS" : "◆";
+  icon.classList.add(name.endsWith(".css") ? "css-icon" : name.endsWith(".js") ? "js-icon" : "delta-icon");
+  item.append(icon, document.createTextNode(" " + name));
+  fileList.appendChild(item);
+  fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
+  saveStatus.textContent = name + " added to the file list; connection coming soon";
+});
