@@ -584,10 +584,14 @@ fileList.addEventListener("click", event => {
   }
 });
 addFileButton.addEventListener("click", () => {
-  const requestedName = window.prompt("New file name (include its extension):", "new-file.delta");
+  const requestedName = window.prompt("New Delta file name (.delta):", "new-file.delta");
   if (requestedName === null) return;
   const name = requestedName.trim();
   if (!name) return;
+  if (!/^[A-Za-z0-9_-]+\.delta$/i.test(name)) {
+    saveStatus.textContent = "Delta files must end in .delta";
+    return;
+  }
   const existing = Array.from(fileList.querySelectorAll(".file-item")).some(item => item.dataset.file.toLowerCase() === name.toLowerCase());
   if (existing) {
     saveStatus.textContent = "That file already exists in the list";
@@ -599,8 +603,8 @@ addFileButton.addEventListener("click", () => {
   item.dataset.file = name;
   const icon = document.createElement("span");
   icon.className = "file-icon";
-  icon.textContent = name.endsWith(".css") ? "#" : name.endsWith(".js") ? "JS" : "◆";
-  icon.classList.add(name.endsWith(".css") ? "css-icon" : name.endsWith(".js") ? "js-icon" : "delta-icon");
+  icon.textContent = "◆";
+  icon.classList.add("delta-icon");
   item.append(icon, document.createTextNode(" " + name));
   fileList.appendChild(item);
   fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
