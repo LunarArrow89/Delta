@@ -20,6 +20,7 @@ function start() {
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
+
   if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
     event.preventDefault();
     keys.add(key);
@@ -56,10 +57,9 @@ function loop(time) {
   x += dx * speed * dt;
   y += dy * speed * dt;
 
-  if (x > window.innerWidth) x = -size;
-  if (x < -size) x = window.innerWidth;
-  if (y > window.innerHeight) y = -size;
-  if (y < -size) y = window.innerHeight;
+  // Keep the character visible inside the screen.
+  x = Math.max(0, Math.min(x, window.innerWidth - size));
+  y = Math.max(0, Math.min(y, window.innerHeight - size));
 
   draw();
   requestAnimationFrame(loop);
