@@ -174,7 +174,7 @@ function renderHighlights() {
           out += '<span class="syntax-variable">' + escapeHighlight(joined[3]) + '</span>';
           out += '<span class="syntax-text-content">' + escapeHighlight(joined[4]) + '</span>';
         } else {
-          out += '<span class="syntax-text-content">' + escapeHighlight(textParen[1]) + '</span>';
+          out += highlightDelimitedContent(textParen[1]);
         }
         out += '<span class="syntax-parenthesis">)</span>';
         code = "";
