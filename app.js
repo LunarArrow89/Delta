@@ -609,6 +609,7 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
+      .replace(/^([ \t]*)text:\((.*?)\s*:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\)[ \t]*$/gm, (_, indent, message, name) => indent + "centerText(" + JSON.stringify(message.trimEnd() + " ") + " + String(" + name + "))")
       .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
         const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
         let expression = "";
