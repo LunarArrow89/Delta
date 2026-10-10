@@ -420,3 +420,15 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 
 /* Delta tag syntax */
 .syntax-tag, #highlightLayer .syntax-tag { color: #176b35 !important; }
+
+
+/* Stable editing mode: let the textarea render its own text.
+   The transparent-text syntax overlay can misalign while typing in some browsers. */
+#highlightLayer {
+  display: none !important;
+}
+#codeEditor {
+  color: #e6e1ff !important;
+  -webkit-text-fill-color: #e6e1ff !important;
+  caret-color: var(--green) !important;
+}
