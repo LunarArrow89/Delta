@@ -574,14 +574,20 @@ document.getElementById("resetButton").addEventListener("click", () => {
 const fileList = document.getElementById("fileList");
 const addFileButton = document.getElementById("addFileButton");
 fileList.addEventListener("click", event => {
+  const deleteButton = event.target.closest(".delete-file-button");
+  if (deleteButton) {
+    const row = deleteButton.closest(".file-row");
+    const item = row?.querySelector(".file-item");
+    if (!item || item.dataset.file === "main.delta") return;
+    const name = item.dataset.file;
+    row.remove();
+    saveStatus.textContent = "Deleted " + name;
+    return;
+  }
   const item = event.target.closest(".file-item");
   if (!item) return;
   fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
-  if (item.dataset.file !== "main.delta") {
-    saveStatus.textContent = item.dataset.file + " — file connection coming soon";
-  } else {
-    saveStatus.textContent = "Editing main.delta";
-  }
+  saveStatus.textContent = item.dataset.file === "main.delta" ? "Editing main.delta" : item.dataset.file + " — file connection coming soon";
 });
 addFileButton.addEventListener("click", () => {
   const requestedName = window.prompt("New Delta file name (.delta):", "new-file.delta");
@@ -597,16 +603,24 @@ addFileButton.addEventListener("click", () => {
     saveStatus.textContent = "That file already exists in the list";
     return;
   }
+  const row = document.createElement("div");
+  row.className = "file-row";
   const item = document.createElement("button");
   item.type = "button";
   item.className = "file-item";
   item.dataset.file = name;
   const icon = document.createElement("span");
-  icon.className = "file-icon";
+  icon.className = "file-icon delta-icon";
   icon.textContent = "◆";
-  icon.classList.add("delta-icon");
   item.append(icon, document.createTextNode(" " + name));
-  fileList.appendChild(item);
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "delete-file-button";
+  remove.setAttribute("aria-label", "Delete " + name);
+  remove.title = "Delete " + name;
+  remove.textContent = "×";
+  row.append(item, remove);
+  fileList.appendChild(row);
   fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
-  saveStatus.textContent = name + " added to the file list; connection coming soon";
+  saveStatus.textContent = name + " added to the file list";
 });
