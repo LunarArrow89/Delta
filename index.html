@@ -19,7 +19,12 @@
     </div>
   </header>
 
-  <main class="workspace">
+  <nav class="view-tabs" aria-label="Editor views">
+    <button id="codeTab" class="view-tab active" type="button" aria-selected="true">Code</button>
+    <button id="tutorialTab" class="view-tab" type="button" aria-selected="false">Tutorial</button>
+  </nav>
+
+  <main class="workspace" id="workspace">
     <section class="editor-panel">
       <div class="panel-heading">
         <div><span class="status-dot"></span> <span>main.delta</span></div>
