@@ -186,3 +186,43 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   .help-intro, .help-foot { grid-column: auto; }
   .panel-note { display: none; }
 }
+
+
+/* Delta syntax highlighting */
+.editor-wrap { position: relative; }
+.highlight-layer {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 42px;
+  margin: 0;
+  padding: 17px 16px 22px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #e6e1ff;
+  white-space: pre;
+  overflow-wrap: normal;
+  pointer-events: none;
+  tab-size: 2;
+  font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+#codeEditor {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: transparent;
+  caret-color: var(--green);
+}
+#codeEditor::selection {
+  background: rgba(156, 140, 255, 0.35);
+  -webkit-text-fill-color: transparent;
+}
+.syntax-variable { color: #ffd866; }
+.syntax-text-command { color: #ff6b6b; }
+.syntax-text-content, .syntax-string { color: #72e0b1; }
+.syntax-comment { color: #737b8d; font-style: italic; }
