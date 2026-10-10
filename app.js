@@ -9,6 +9,7 @@ const projectSelect = document.getElementById("projectSelect");
 const saveStatus = document.getElementById("saveStatus");
 let runtimeWindow = null, runtimeCanvas = null, runtimeContext = null, runtimeLog = null;
 let runtimeScene = [], runtimeBackground = "#000000", runtimeHeldKeys = new Set(), runtimeMovementStarted = false, runtimeLastFrame = 0;
+let runtimeSquareSettings = {x:100,y:100,size:40,speed:3.5};
 const PROJECTS_KEY = "delta-projects";
 function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY) || "{}"); } catch { return {}; } }
 function refreshProjects(selected = "") {
@@ -554,13 +555,14 @@ class DeltaParser {
     if (name === "screen") { if (!runtimeCanvas) throw new Error("The game screen is not available. Press Run again."); runtimeCanvas.width=Math.max(100,Math.min(1600,Number(args[0])||640)); runtimeCanvas.height=Math.max(100,Math.min(1200,Number(args[1])||400)); drawRuntimeScene(); return null; }
     if (name === "background") { runtimeBackground=String(args[0]??"#ffffff"); runtimeScene=[]; drawRuntimeScene(); return null; }
     if (name === "centerText") { runtimeScene.push({type:"centerText",value:String(args[0]??"")}); drawRuntimeScene(); return null; }
+    if (name === "setSquareSize") { runtimeSquareSettings.size = Math.max(0, Number(args[0]) || 0); return null; }
+    if (name === "setSquareLocation") { runtimeSquareSettings.x = Number(args[0]) || 0; runtimeSquareSettings.y = Number(args[1]) || 0; return null; }
+    if (name === "setSquareSpeed") { runtimeSquareSettings.speed = Math.max(0, Number(args[0]) || 0); return null; }
     if (name === "square" || name === "moveSquare") {
       const moving = name === "moveSquare";
-      const fourthIsSpeed = typeof args[3] === "number";
-      const color = fourthIsSpeed ? String(args[5] ?? "#ffffff") : String(args[3] ?? "#ffffff");
-      const speed = moving ? Math.max(0, Number(fourthIsSpeed ? args[3] : args[4]) || 3.5) : 0;
-      const controls = moving ? parseMovementControls(args[fourthIsSpeed ? 4 : 5]) : defaultMovementControls();
-      runtimeScene.push({type:"square",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color,moving,speed,controls});
+      const hasLegacySpeed = typeof args[3] === "number";
+      const shape = {type:"square",x:Number(args[0])||runtimeSquareSettings.x,y:Number(args[1])||runtimeSquareSettings.y,size:Math.max(0,Number(args[2])||runtimeSquareSettings.size),color:String(args[hasLegacySpeed?5:3]??"#ffffff"),moving,speed:moving?(runtimeSquareSettings.speed??3.5):0,controls:moving?parseMovementControls(args[hasLegacySpeed?4:4]):defaultMovementControls()};
+      runtimeScene.push(shape);
       if(moving)startRuntimeMovement(); drawRuntimeScene(); return null;
     }
     if (name === "moveRect") {
@@ -656,7 +658,7 @@ function startRuntimeMovement(){
 function openRuntimeWindow(){
   runtimeWindow=window.open("","DeltaProgramWindow","popup,width=900,height=650,resizable=yes,scrollbars=yes");
   if(!runtimeWindow){addOutput("Allow pop-ups for this site so Delta can open your program in a new window.","error");runStatus.textContent="Popup blocked";return false;}
-  runtimeScene=[];runtimeBackground="#000000";runtimeMovementStarted=false;runtimeLastFrame=0;runtimeHeldKeys=new Set();
+  runtimeScene=[];runtimeBackground="#000000";runtimeMovementStarted=false;runtimeLastFrame=0;runtimeHeldKeys=new Set();runtimeSquareSettings={x:100,y:100,size:40,speed:3.5};
   runtimeWindow.document.open();runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Game</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}canvas{display:block;width:100vw;height:100vh;background:#000}</style></head><body><canvas id="screen" width="640" height="400"></canvas></body></html>');runtimeWindow.document.close();
   runtimeCanvas=runtimeWindow.document.getElementById("screen");runtimeContext=runtimeCanvas.getContext("2d");runtimeLog=null;return true;
 }
@@ -667,7 +669,11 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      .replace(/^([ \t]*)(square|rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "square" ? "moveSquare(" : shape === "rect" ? "moveRect(" : "moveCircle("))
+      .replace(/^([ \t]*)square\s*\*size\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSize(" + args + ")")
+      .replace(/^([ \t]*)square\s*\*location\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareLocation(" + args + ")")
+      .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
+      .replace(/^([ \t]*)square\s*\*movement\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "moveSquare(" + args + ")")
+      .replace(/^([ \t]*)(rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "rect" ? "moveRect(" : "moveCircle("))
       .replace(/^([ \t]*)text:\((.*?)\s*:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\)[ \t]*$/gm, (_, indent, message, name) => indent + "centerText(" + JSON.stringify(message.trimEnd() + " ") + " + String(" + name + "))")
       .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
         const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
