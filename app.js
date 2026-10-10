@@ -41,6 +41,20 @@ localStorage.setItem("delta-code", editor.value);
 function escapeHighlight(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+function highlightDelimitedContent(value) {
+  const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\//g;
+  let result = "";
+  let lastIndex = 0;
+  let match;
+  while ((match = pattern.exec(value)) !== null) {
+    result += escapeHighlight(value.slice(lastIndex, match.index));
+    result += match[1] !== undefined
+      ? '<span class="syntax-text-content">' + escapeHighlight(match[0]) + '</span>'
+      : '<span class="syntax-variable">' + escapeHighlight(match[0]) + '</span>';
+    lastIndex = match.index + match[0].length;
+  }
+  return result + escapeHighlight(value.slice(lastIndex));
+}
 function renderHighlights() {
   const layer = document.getElementById("highlightLayer");
   if (!layer) return;
@@ -58,25 +72,29 @@ function renderHighlights() {
         const declared = new Set(Array.from(editor.value.matchAll(/\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
         const inner = askParen[2];
         let askContent = "";
-        let remaining = inner;
-        while (remaining.length) {
-          const quote = remaining.match(/^("|')(?:\\\\.|(?!\\1)[^\\\\])*?\\1/);
-          if (quote) {
-            askContent += '<span class="syntax-text-content">' + escapeHighlight(quote[0]) + '</span>';
-            remaining = remaining.slice(quote[0].length);
-            continue;
+        if (inner.includes(":") || /\/[A-Za-z_][A-Za-z0-9_]*\//.test(inner)) {
+          askContent = highlightDelimitedContent(inner);
+        } else {
+          let remaining = inner;
+          while (remaining.length) {
+            const quote = remaining.match(/^("|')(?:\\.|(?!\1)[^\\])*?\1/);
+            if (quote) {
+              askContent += '<span class="syntax-text-content">' + escapeHighlight(quote[0]) + '</span>';
+              remaining = remaining.slice(quote[0].length);
+              continue;
+            }
+            const word = remaining.match(/^[A-Za-z_][A-Za-z0-9_]*/);
+            if (word) {
+              const name = word[0];
+              askContent += declared.has(name)
+                ? '<span class="syntax-variable">' + escapeHighlight(name) + '</span>'
+                : '<span class="syntax-text-content">' + escapeHighlight(name) + '</span>';
+              remaining = remaining.slice(name.length);
+              continue;
+            }
+            askContent += '<span class="syntax-text-content">' + escapeHighlight(remaining[0]) + '</span>';
+            remaining = remaining.slice(1);
           }
-          const word = remaining.match(/^[A-Za-z_][A-Za-z0-9_]*/);
-          if (word) {
-            const name = word[0];
-            askContent += declared.has(name)
-              ? '<span class="syntax-variable">' + escapeHighlight(name) + '</span>'
-              : '<span class="syntax-text-content">' + escapeHighlight(name) + '</span>';
-            remaining = remaining.slice(name.length);
-            continue;
-          }
-          askContent += '<span class="syntax-text-content">' + escapeHighlight(remaining[0]) + '</span>';
-          remaining = remaining.slice(1);
         }
         out += '<span class="syntax-purple">ask</span><span class="syntax-text-content">' + escapeHighlight(askParen[1].slice(3)) + '</span>';
         out += askContent;
@@ -140,18 +158,7 @@ function renderHighlights() {
         const inner = textColonParen[2];
         const declared = new Set(Array.from(editor.value.matchAll(/\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
         out += escapeHighlight(textColonParen[1]) + '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span>';
-        let remaining = ':' + inner;
-        const variablePattern = /\/([A-Za-z_][A-Za-z0-9_]*)\//g;
-        let lastIndex = 0;
-        let match;
-        while ((match = variablePattern.exec(remaining)) !== null) {
-          out += '<span class="syntax-text-content">' + escapeHighlight(remaining.slice(lastIndex, match.index)) + '</span>';
-          out += declared.has(match[1])
-            ? '<span class="syntax-variable">/' + escapeHighlight(match[1]) + '/</span>'
-            : '<span class="syntax-text-content">/' + escapeHighlight(match[1]) + '/</span>';
-          lastIndex = match.index + match[0].length;
-        }
-        out += '<span class="syntax-text-content">' + escapeHighlight(remaining.slice(lastIndex)) + '</span><span class="syntax-parenthesis">)</span>';
+        out += highlightDelimitedContent(':' + inner) + '<span class="syntax-parenthesis">)</span>';
         code = "";
         continue;
       }
