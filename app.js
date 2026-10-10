@@ -44,13 +44,13 @@ function escapeHighlight(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 function highlightDelimitedContent(value) {
-  const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\//g;
+  const pattern = /::([^]*?)::|:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\//g;
   let result = "";
   let lastIndex = 0;
   let match;
   while ((match = pattern.exec(value)) !== null) {
     result += escapeHighlight(value.slice(lastIndex, match.index));
-    result += match[1] !== undefined
+    result += (match[1] !== undefined || match[2] !== undefined)
       ? '<span class="syntax-text-content">' + escapeHighlight(match[0]) + '</span>'
       : '<span class="syntax-variable">' + escapeHighlight(match[0]) + '</span>';
     lastIndex = match.index + match[0].length;
