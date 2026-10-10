@@ -422,13 +422,13 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .syntax-tag, #highlightLayer .syntax-tag { color: #176b35 !important; }
 
 
-/* Stable editing mode: let the textarea render its own text.
-   The transparent-text syntax overlay can misalign while typing in some browsers. */
+/* Keep syntax colors while keeping the editor text and overlay aligned. */
 #highlightLayer {
-  display: none !important;
+  display: block !important;
+  box-sizing: border-box;
 }
 #codeEditor {
-  color: #e6e1ff !important;
-  -webkit-text-fill-color: #e6e1ff !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
   caret-color: var(--green) !important;
 }
