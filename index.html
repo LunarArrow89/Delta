@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17191f">
-  <title>Delta — Your First Programming Language</title>
+  <title>Delta — Tiny Game Engine</title>
   <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
@@ -44,36 +44,24 @@
     <aside class="help-panel">
       <div class="panel-heading"><span>Language basics</span></div>
       <div class="help-content">
-        <p class="help-intro">Build a program with Delta. Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to run it in a new window.</p>
-        <h3>Show text</h3>
-        <pre><code>print("Hello, world!")</code></pre>
-        <h3>Save a value</h3>
-        <pre><code>let score = 10
-print(score)</code></pre>
-        <h3>Do math</h3>
-        <pre><code>let total = 4 + 6 * 2
-print(total)</code></pre>
-        <h3>Make a decision</h3>
-        <pre><code>let score = 12
-if score >= 10 {
-  print("You did it!")
-} else {
-  print("Try again")
-}</code></pre>
-        <h3>Draw shapes in the program window</h3>
-        <pre><code>screen(640, 400)
-background("#182033")
-square(60, 80, 70, "#9c8cff")
-circle(220, 120, 35, "#72e0b1")
-text("Hello!", 60, 230, "#ffffff", 28)</code></pre>
-        <h3>Change a variable</h3>
-        <pre><code>let score = 1
-score = score + 1
-print(score)</code></pre>
-        <p class="help-foot">Strings use quotes. Use <code>//</code> to write a comment. Statements can go on separate lines.</p>
+        <p class="help-intro">Delta is a tiny game engine. Your running game opens as a screen with no extra interface. Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to run.</p>
+        <h3>Show centered text</h3>
+        <pre><code>text:Hello!:</code></pre>
+        <p class="help-foot">Text between the colons appears in the middle of the screen.</p>
+        <h3>Set the screen size</h3>
+        <pre><code>screen(640, 400)</code></pre>
+        <h3>Choose a background</h3>
+        <pre><code>background("#10131c")</code></pre>
+        <h3>Draw a square</h3>
+        <pre><code>square(60, 80, 70, "#9c8cff")</code></pre>
+        <h3>Draw a circle</h3>
+        <pre><code>circle(220, 120, 35, "#72e0b1")</code></pre>
+        <h3>Draw a rectangle</h3>
+        <pre><code>rect(40, 50, 120, 60, "#9c8cff")</code></pre>
+        <p class="help-foot">Shape commands use x and y positions measured from the top-left corner. Use <code>//</code> to write a comment.</p>
       </div>
     </aside>
   </main>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
