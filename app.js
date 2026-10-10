@@ -55,10 +55,17 @@ function renderHighlights() {
     while (code.length) {
       const textParen = code.match(/^text:\((.*)\)$/);
       if (textParen) {
-        const joined = textParen[1].match(/^(.*?):\+:([A-Za-z_][A-Za-z0-9_]*):$/);
-        out += '<span class="syntax-text-content">text:(' + escapeHighlight(joined ? joined[1] : textParen[1]);
-        if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';
-        out += ')</span>';
+        const joined = textParen[1].match(/^(.*?)(\s*:\s*\+\s*:\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*:)$/);
+        out += '<span class="syntax-text-content">text:</span><span class="syntax-parenthesis">(</span>';
+        if (joined) {
+          out += '<span class="syntax-text-content">' + escapeHighlight(joined[1]) + '</span>';
+          out += '<span class="syntax-text-content">' + escapeHighlight(joined[2]) + '</span>';
+          out += '<span class="syntax-variable">' + escapeHighlight(joined[3]) + '</span>';
+          out += '<span class="syntax-text-content">' + escapeHighlight(joined[4]) + '</span>';
+        } else {
+          out += '<span class="syntax-text-content">' + escapeHighlight(textParen[1]) + '</span>';
+        }
+        out += '<span class="syntax-parenthesis">)</span>';
         code = "";
         continue;
       }
