@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17191f">
   <title>Delta — Your First Programming Language</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="./">DELTA<span>LANG</span></a>
     <div class="top-actions">
-      <button id="resetButton" class="quiet-button" type="button">Reset code</button>
-      <button id="runButton" class="run-button" type="button">▶ Run</button>
+      <input id="projectName" class="project-name" aria-label="Project name" value="My Delta Project" maxlength="40">
+      <button id="saveProjectButton" class="quiet-button" type="button">Save</button>
+      <select id="projectSelect" class="project-select" aria-label="Saved projects"><option value="">Saved projects…</option></select>
+      <button id="resetButton" class="quiet-button" type="button">New</button>
+      <button id="runButton" class="run-button" type="button">▶ Run in window</button>
     </div>
   </header>
 
@@ -26,7 +29,7 @@
         <div id="lineNumbers" class="line-numbers" aria-hidden="true">1</div>
         <textarea id="codeEditor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Delta code editor"></textarea>
       </div>
-      <div class="editor-footer"><span>Unsaved playground</span><span id="cursorInfo">Line 1</span></div>
+      <div class="editor-footer"><span id="saveStatus">Autosaved in this browser</span><span id="cursorInfo">Line 1</span></div>
     </section>
 
     <section class="output-panel">
@@ -34,14 +37,14 @@
         <span>Output</span>
         <button id="clearButton" class="text-button" type="button">Clear</button>
       </div>
-      <div id="output" class="output" role="log" aria-live="polite"><p class="placeholder">Run your Delta code to see what happens.</p></div>
+      <div id="output" class="output" role="log" aria-live="polite"><p class="placeholder">Press Run in window to execute your Delta program.</p></div>
       <div class="output-footer"><span id="runStatus">Ready</span><span>Delta playground</span></div>
     </section>
 
     <aside class="help-panel">
       <div class="panel-heading"><span>Language basics</span></div>
       <div class="help-content">
-        <p class="help-intro">Write a little code. Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to run it.</p>
+        <p class="help-intro">Build a program with Delta. Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to run it in a new window.</p>
         <h3>Show text</h3>
         <pre><code>print("Hello, world!")</code></pre>
         <h3>Save a value</h3>
@@ -65,6 +68,6 @@ print(score)</code></pre>
       </div>
     </aside>
   </main>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
