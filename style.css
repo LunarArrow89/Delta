@@ -416,3 +416,7 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 
 /* Built-in drawing and styling commands */
 .syntax-style-command, #highlightLayer .syntax-style-command { color: #ff69b4 !important; }
+
+
+/* Delta tag syntax */
+.syntax-tag, #highlightLayer .syntax-tag { color: #176b35 !important; }
