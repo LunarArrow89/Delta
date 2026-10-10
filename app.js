@@ -4,6 +4,30 @@ const lineNumbers = document.getElementById("lineNumbers");
 const runButton = document.getElementById("runButton");
 const runStatus = document.getElementById("runStatus");
 const cursorInfo = document.getElementById("cursorInfo");
+const projectName = document.getElementById("projectName");
+const projectSelect = document.getElementById("projectSelect");
+const saveStatus = document.getElementById("saveStatus");
+let runtimeWindow = null, runtimeCanvas = null, runtimeContext = null, runtimeLog = null;
+const PROJECTS_KEY = "delta-projects";
+function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY) || "{}"); } catch { return {}; } }
+function refreshProjects(selected = "") {
+  const projects = getProjects();
+  projectSelect.replaceChildren(new Option("Saved projects…", ""));
+  Object.keys(projects).sort().forEach(name => projectSelect.add(new Option(name, name)));
+  projectSelect.value = selected;
+}
+function saveCurrentProject() {
+  const name = projectName.value.trim() || "Untitled Project";
+  projectName.value = name;
+  const projects = getProjects();
+  projects[name] = editor.value;
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+  localStorage.setItem("delta-code", editor.value);
+  saveStatus.textContent = "Autosaved";
+  refreshProjects(name);
+  saveStatus.textContent = "Saved: " + name;
+}
+refreshProjects();
 
 const starterCode = `// Welcome to Delta!
 let name = "world"
@@ -293,10 +317,30 @@ class DeltaParser {
       if (token.value === "true") return true;
       if (token.value === "false") return false;
       if (token.value === "null") return null;
+      if (this.check("(")) {
+        this.index++;
+        const args = [];
+        if (!this.check(")")) { do { args.push(this.expression()); } while (this.match(",")); }
+        this.expect(")");
+        return this.callBuiltin(token.value, args);
+      }
       if (!(token.value in this.variables)) throw new Error('"' + token.value + '" is not defined. Create it with let ' + token.value + ' = ...');
       return this.variables[token.value];
     }
     throw new Error('Expected a value, but found "' + (token.value || "end of code") + '".');
+  }
+  callBuiltin(name, args) {
+    if (name === "screen") {
+      runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
+      runtimeCanvas.height = Math.max(100, Math.min(1200, Number(args[1]) || 400)); return null;
+    }
+    if (name === "background") { runtimeContext.fillStyle = String(args[0] ?? "#ffffff"); runtimeContext.fillRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
+    if (name === "square") { runtimeContext.fillStyle = String(args[3] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[2]) || 0)); return null; }
+    if (name === "rect") { runtimeContext.fillStyle = String(args[4] ?? "#8b7cff"); runtimeContext.fillRect(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), Math.max(0, Number(args[3]) || 0)); return null; }
+    if (name === "circle") { runtimeContext.beginPath(); runtimeContext.fillStyle = String(args[3] ?? "#72e0b1"); runtimeContext.arc(Number(args[0]) || 0, Number(args[1]) || 0, Math.max(0, Number(args[2]) || 0), 0, Math.PI * 2); runtimeContext.fill(); return null; }
+    if (name === "text") { runtimeContext.fillStyle = String(args[3] ?? "#ffffff"); runtimeContext.font = Math.max(8, Number(args[4]) || 24) + "px system-ui, sans-serif"; runtimeContext.fillText(String(args[0] ?? ""), Number(args[1]) || 0, Number(args[2]) || 0); return null; }
+    if (name === "clear") { runtimeContext.clearRect(0, 0, runtimeCanvas.width, runtimeCanvas.height); return null; }
+    throw new Error('Unknown function "' + name + '". Use screen, background, square, rect, circle, text, or clear.');
   }
   truthy(value) { return Boolean(value); }
 }
@@ -313,26 +357,51 @@ function addOutput(text, type = "") {
   line.className = "output-line" + (type ? " " + type : "");
   line.textContent = text;
   output.appendChild(line);
+  if (runtimeLog && runtimeWindow && !runtimeWindow.closed) {
+    const row = runtimeWindow.document.createElement("div");
+    row.textContent = text;
+    row.style.cssText = "font:13px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0;color:" + (type === "error" ? "#ff929d" : type === "success" ? "#72e0b1" : "#e8eaf2");
+    runtimeLog.appendChild(row);
+  }
 }
-
+function openRuntimeWindow() {
+  runtimeWindow = window.open("", "DeltaProgramWindow", "popup,width=900,height=650,resizable=yes,scrollbars=yes");
+  if (!runtimeWindow) { addOutput("Allow pop-ups for this site so Delta can open your program in a new window.", "error"); runStatus.textContent = "Popup blocked"; return false; }
+  runtimeWindow.document.open();
+  runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Program</title><style>*{box-sizing:border-box}body{margin:0;background:#17191f;color:#eef0f6;font:14px system-ui,sans-serif;padding:18px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}h1{font-size:16px}#state{color:#72e0b1;font-size:12px}canvas{display:block;max-width:100%;height:auto;background:#fff;border:1px solid #343946}#log{margin-top:14px;padding:12px;background:#20232c;border:1px solid #343946;border-radius:8px;min-height:45px}</style></head><body><header><h1>Delta program</h1><span id="state">Running</span></header><canvas id="screen" width="640" height="400"></canvas><section id="log"></section></body></html>');
+  runtimeWindow.document.close();
+  runtimeCanvas = runtimeWindow.document.getElementById("screen");
+  runtimeContext = runtimeCanvas.getContext("2d");
+  runtimeLog = runtimeWindow.document.getElementById("log");
+  return true;
+}
 function runCode() {
   output.replaceChildren();
   runStatus.textContent = "Running…";
+  if (!openRuntimeWindow()) return;
   const started = performance.now();
   try {
-    const tokens = tokenize(editor.value);
-    const parser = new DeltaParser(tokens, value => addOutput(formatValue(value)));
+    const parser = new DeltaParser(tokenize(editor.value), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
+    runtimeWindow.document.getElementById("state").textContent = "Finished";
     runStatus.textContent = "Finished";
   } catch (error) {
     addOutput("Error: " + error.message, "error");
+    runtimeWindow.document.getElementById("state").textContent = "Error";
     runStatus.textContent = "Error";
   }
-  if (!output.children.length) output.innerHTML = '<p class="placeholder">Program finished without printing anything.</p>';
 }
-
 runButton.addEventListener("click", runCode);
+document.getElementById("saveProjectButton").addEventListener("click", saveCurrentProject);
+projectSelect.addEventListener("change", () => {
+  const name = projectSelect.value, projects = getProjects();
+  if (name && Object.prototype.hasOwnProperty.call(projects, name)) {
+    projectName.value = name; editor.value = projects[name];
+    localStorage.setItem("delta-code", editor.value); updateEditorInfo();
+    saveStatus.textContent = "Loaded: " + name;
+  }
+});
 document.getElementById("clearButton").addEventListener("click", () => {
   output.replaceChildren();
   output.innerHTML = '<p class="placeholder">Output cleared.</p>';
