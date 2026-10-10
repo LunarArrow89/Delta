@@ -155,12 +155,12 @@ function renderHighlights() {
         code = "";
         continue;
       }
-      const textColonParen = code.match(/^(\s*)text\(:([\s\S]*)\)$/);
+      const textColonParen = code.match(/^(\s*)text\(:([\s\S]*?)(\))?$/);
       if (textColonParen) {
         const inner = textColonParen[2];
-        const declared = new Set(Array.from(editor.value.matchAll(/\b(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
         out += escapeHighlight(textColonParen[1]) + '<span class="syntax-text-command">text</span><span class="syntax-parenthesis">(</span>';
-        out += highlightDelimitedContent(inner) + '<span class="syntax-parenthesis">)</span>';
+        out += highlightDelimitedContent(inner);
+        if (textColonParen[3]) out += '<span class="syntax-parenthesis">)</span>';
         code = "";
         continue;
       }
