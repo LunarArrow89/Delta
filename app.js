@@ -53,6 +53,37 @@ function renderHighlights() {
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
     while (code.length) {
+      const askParen = code.match(/^(\\s*ask\\s*\\()(.*)(\\)\\s*;?\\s*)$/);
+      if (askParen) {
+        const declared = new Set(Array.from(editor.value.matchAll(/\\b(?:let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)/g), match => match[1]));
+        const inner = askParen[2];
+        let askContent = "";
+        let remaining = inner;
+        while (remaining.length) {
+          const quote = remaining.match(/^("|')(?:\\\\.|(?!\\1)[^\\\\])*?\\1/);
+          if (quote) {
+            askContent += '<span class="syntax-text-content">' + escapeHighlight(quote[0]) + '</span>';
+            remaining = remaining.slice(quote[0].length);
+            continue;
+          }
+          const word = remaining.match(/^[A-Za-z_][A-Za-z0-9_]*/);
+          if (word) {
+            const name = word[0];
+            askContent += declared.has(name)
+              ? '<span class="syntax-variable">' + escapeHighlight(name) + '</span>'
+              : '<span class="syntax-text-content">' + escapeHighlight(name) + '</span>';
+            remaining = remaining.slice(name.length);
+            continue;
+          }
+          askContent += '<span class="syntax-text-content">' + escapeHighlight(remaining[0]) + '</span>';
+          remaining = remaining.slice(1);
+        }
+        out += '<span class="syntax-purple">ask</span><span class="syntax-text-content">' + escapeHighlight(askParen[1].slice(3)) + '</span>';
+        out += askContent;
+        out += '<span class="syntax-text-content">' + escapeHighlight(askParen[3]) + '</span>';
+        code = "";
+        continue;
+      }
       const textParen = code.match(/^text:\((.*)\)$/);
       if (textParen) {
         const joined = textParen[1].match(/^(.*?)(\s*:\s*\+\s*:\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*:)$/);
