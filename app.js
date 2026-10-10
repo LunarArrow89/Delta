@@ -412,7 +412,7 @@ document.getElementById("resetButton").addEventListener("click", () => {
   localStorage.setItem("delta-code", editor.value);
   updateEditorInfo();
   output.replaceChildren();
-  output.innerHTML = '<p class="placeholder">Starter code restored. Press Run when you're ready.</p>';
+  output.innerHTML = "<p class=\"placeholder\">Starter code restored. Press Run when you're ready.</p>";
   runStatus.textContent = "Ready";
   editor.focus();
 });
