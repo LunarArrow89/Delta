@@ -328,6 +328,7 @@ class DeltaParser {
     throw new Error('Expected a value, but found "' + (token.value || "end of code") + '".');
   }
   callBuiltin(name, args) {
+    if (name === "String") return String(args[0] ?? "");
     if (name === "screen") {
       if (!runtimeCanvas || !runtimeContext) throw new Error("The game screen is not available. Press Run again.");
       runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
@@ -401,11 +402,9 @@ function runCode() {
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
-    if (runtimeWindow && !runtimeWindow.closed) runtimeWindow.document.getElementById("state").textContent = "Finished";
     runStatus.textContent = "Finished";
   } catch (error) {
     addOutput("Error: " + error.message, "error");
-    if (runtimeWindow && !runtimeWindow.closed) runtimeWindow.document.getElementById("state").textContent = "Error";
     runStatus.textContent = "Error";
   }
 }
