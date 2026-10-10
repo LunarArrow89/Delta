@@ -577,7 +577,7 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      .replace(/^([ \\t]*)ask\\(:([\\s\\S]*?):\\)[ \\t]*$/gm, (_, indent, inside) => {
+      .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
         const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
         let expression = "";
         parts.forEach((part, index) => {
@@ -589,7 +589,7 @@ function runCode() {
         });
         return indent + "ask(" + (expression || '""') + ")";
       })
-      .replace(/^([ \\t]*)ask:\\((.*?)\\)[ \\t]*$/gm, (_, indent, inside) => {
+      .replace(/^([ \t]*)ask:\((.*?)\)[ \t]*$/gm, (_, indent, inside) => {
         const joined = inside.match(/^(.*?)\\s*:\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):\\s*$/);
         if (joined) return indent + "ask(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
         return indent + "ask(" + JSON.stringify(inside) + ")";
