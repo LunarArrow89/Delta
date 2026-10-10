@@ -46,24 +46,33 @@ function renderHighlights() {
   if (!layer) return;
   const reserved = new Set(["let", "var", "if", "then", "else", "true", "false", "null", "and", "or", "not"]);
   const controlKeywords = new Set(["if", "then", "else"]);
-  const builtins = new Set(["screen", "background", "square", "rect", "circle", "clear", "ask", "gather"]);
+  const builtins = new Set(["screen", "background", "square", "rect", "circle", "clear"]);
   const html = editor.value.split("\n").map(line => {
     const commentAt = line.indexOf("//");
     let code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
     while (code.length) {
-      const textParen = code.match(/^text:\\((.*)\\)$/);\n      if (textParen) {\n        const joined = textParen[1].match(/^(.*?):\\+:(\\w+):$/);\n        out += '<span class="syntax-text-content">text:(' + escapeHighlight(joined ? joined[1] : textParen[1]);\n        if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';\n        out += ')</span>';\n        code = "";\n        continue;\n      }\n      const textShortcut = code.match(/^text:(.*):$/);
+      const textParen = code.match(/^text:\((.*)\)$/);
+      if (textParen) {
+        const joined = textParen[1].match(/^(.*?):\+:([A-Za-z_][A-Za-z0-9_]*):$/);
+        out += '<span class="syntax-text-content">text:(' + escapeHighlight(joined ? joined[1] : textParen[1]);
+        if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';
+        out += ')</span>';
+        code = "";
+        continue;
+      }
+      const textShortcut = code.match(/^text:(.*):$/);
       if (textShortcut) {
         const inner = textShortcut[1];
-        const joined = inner.match(/^(.*?):\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):\\s*$/);
+        const joined = inner.match(/^(.*?):\+:([A-Za-z_][A-Za-z0-9_]*):$/);
         out += '<span class="syntax-text-content">text:' + escapeHighlight(joined ? joined[1] : inner);
         if (joined) out += '<span class="syntax-text-content">:+:</span><span class="syntax-variable">' + escapeHighlight(joined[2]) + '</span><span class="syntax-text-content">:</span>';
         out += ':</span>';
         code = "";
         continue;
       }
-      const quote = code.match(/^(["'])(?:\\.|(?!\1)[^\\])*?\1/);
+      const quote = code.match(/^("|')(?:\\.|(?!\1)[^\\])*?\1/);
       if (quote) {
         out += '<span class="syntax-string">' + escapeHighlight(quote[0]) + '</span>';
         code = code.slice(quote[0].length);
@@ -73,14 +82,16 @@ function renderHighlights() {
       if (word) {
         const name = word[0];
         const rest = code.slice(name.length);
-        if (name === "ask" || name === "gather") {\n          out += '<span class="syntax-purple">' + escapeHighlight(name) + '</span>';\n        } else if (name === "text" && /^\s*\(/.test(rest)) {
+        if (name === "ask" || name === "gather") {
+          out += '<span class="syntax-purple">' + escapeHighlight(name) + '</span>';
+        } else if (name === "text" && /^\s*\(/.test(rest)) {
           out += '<span class="syntax-text-command">' + name + '</span>';
         } else if (controlKeywords.has(name)) {
           out += '<span class="syntax-keyword">' + escapeHighlight(name) + '</span>';
         } else if (reserved.has(name) || builtins.has(name)) {
           out += escapeHighlight(name);
         } else {
-          out += '<span class="syntax-variable">' + name + '</span>';
+          out += '<span class="syntax-variable">' + escapeHighlight(name) + '</span>';
         }
         code = rest;
         continue;
@@ -225,7 +236,26 @@ class DeltaParser {
     if (inBlock) this.expect("}");
   }
   statement() {
-    if (this.match("gather")) {\n      this.expect("(");\n      const keyName = this.identifier();\n      this.expect(")");\n      const parser = this;\n      if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before gathering a key.");\n      throw { deltaWaitingForKey: true, resume() {\n        const handler = event => {\n          event.preventDefault();\n          parser.variables[keyName] = event.key.toLowerCase();\n          runtimeWindow.removeEventListener("keydown", handler);\n          const prompt = runtimeWindow.document.getElementById("delta-ask-prompt");\n          if (prompt) prompt.remove();\n          try { parser.statements(false); runStatus.textContent = "Finished"; addOutput("✓ Finished", "success"); } catch (error) { if (error?.deltaWaitingForKey) error.resume(); else { addOutput("Error: " + error.message, "error"); runStatus.textContent = "Error"; } }\n        };\n        runtimeWindow.addEventListener("keydown", handler);\n        runStatus.textContent = "Waiting for a key…";\n      } };\n    }\n    if (this.match("let", "var")) {
+    if (this.match("gather")) {
+      this.expect("(");
+      const keyName = this.identifier();
+      this.expect(")");
+      const parser = this;
+      if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before gathering a key.");
+      throw { deltaWaitingForKey: true, resume() {
+        const handler = event => {
+          event.preventDefault();
+          parser.variables[keyName] = event.key.toLowerCase();
+          runtimeWindow.removeEventListener("keydown", handler);
+          const prompt = runtimeWindow.document.getElementById("delta-ask-prompt");
+          if (prompt) prompt.remove();
+          try { parser.statements(false); runStatus.textContent = "Finished"; addOutput("✓ Finished", "success"); } catch (error) { if (error?.deltaWaitingForKey) error.resume(); else { addOutput("Error: " + error.message, "error"); runStatus.textContent = "Error"; } }
+        };
+        runtimeWindow.addEventListener("keydown", handler);
+        runStatus.textContent = "Waiting for a key…";
+      } };
+    }
+    if (this.match("let", "var")) {
       const name = this.identifier();
       this.expect("=");
       this.variables[name] = this.expression();
@@ -386,7 +416,14 @@ class DeltaParser {
     throw new Error('Expected a value, but found "' + (token.value || "end of code") + '".');
   }
   callBuiltin(name, args) {
-    if (name === "String") return String(args[0] ?? "");\n    if (name === "ask") {\n      if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before asking for a key.");\n      let prompt = runtimeWindow.document.getElementById("delta-ask-prompt");\n      if (!prompt) { prompt = runtimeWindow.document.createElement("div"); prompt.id = "delta-ask-prompt"; prompt.style.cssText = "position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:90vw;padding:14px 20px;border-radius:12px;background:#24202e;color:#e8d8ff;border:1px solid #a879d8;font:16px system-ui,sans-serif;text-align:center;z-index:9999;box-shadow:0 6px 24px #0008"; runtimeWindow.document.body.appendChild(prompt); }\n      prompt.textContent = String(args[0] ?? "");\n      return null;\n    }
+    if (name === "String") return String(args[0] ?? "");
+    if (name === "ask") {
+      if (!runtimeWindow || runtimeWindow.closed) throw new Error("Open the game window before asking for a key.");
+      let prompt = runtimeWindow.document.getElementById("delta-ask-prompt");
+      if (!prompt) { prompt = runtimeWindow.document.createElement("div"); prompt.id = "delta-ask-prompt"; prompt.style.cssText = "position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:90vw;padding:14px 20px;border-radius:12px;background:#24202e;color:#e8d8ff;border:1px solid #a879d8;font:16px system-ui,sans-serif;text-align:center;z-index:9999;box-shadow:0 6px 24px #0008"; runtimeWindow.document.body.appendChild(prompt); }
+      prompt.textContent = String(args[0] ?? "");
+      return null;
+    }
     if (name === "screen") {
       if (!runtimeCanvas || !runtimeContext) throw new Error("The game screen is not available. Press Run again.");
       runtimeCanvas.width = Math.max(100, Math.min(1600, Number(args[0]) || 640));
