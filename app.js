@@ -586,11 +586,12 @@ class DeltaParser {
       runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius,color:String(args[3]??"#ffffff"),moving:true,speed:Math.max(0,Number(args[4])||3.5),controls:parseMovementControls(args[5])});
       startRuntimeMovement(); drawRuntimeScene(); return null;
     }
+    if (name === "triangle") { const moving=args[5]!==undefined&&args[5]!==null; runtimeScene.push({type:"triangle",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving,speed:Math.max(0,Number(args[4])||3.5),controls:moving?parseMovementControls(args[5]):defaultMovementControls()}); if(moving)startRuntimeMovement(); drawRuntimeScene(); return null; }
     if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "text") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
-    throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, text, or clear.');
+    throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, triangle, text, or clear.');
   }
   truthy(value) { return Boolean(value); }
 }
@@ -656,7 +657,7 @@ function startRuntimeMovement(){
       if(c.right.some(k=>runtimeHeldKeys.has(k)))dx++;
       if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
       if(dx||dy){
-        const half=s.type==="circle"?s.radius:0, w=s.type==="square"?s.size:s.type==="rect"?s.width:0, h=s.type==="square"?s.size:s.type==="rect"?s.height:0;
+        const half=s.type==="circle"?s.radius:0, w=(s.type==="square"||s.type==="triangle")?s.size:s.type==="rect"?s.width:0, h=(s.type==="square"||s.type==="triangle")?s.size:s.type==="rect"?s.height:0;
         const speed=Math.max(0,Number(s.speed)||3.5);
         s.x=Math.max(half,Math.min(runtimeCanvas.width-w-half,s.x+dx*speed*elapsed));
         s.y=Math.max(half,Math.min(runtimeCanvas.height-h-half,s.y+dy*speed*elapsed));
