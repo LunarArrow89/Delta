@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17191f">
   <title>Delta — Your First Programming Language</title>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <header class="topbar">
@@ -60,6 +60,12 @@ if score >= 10 {
 } else {
   print("Try again")
 }</code></pre>
+        <h3>Draw shapes in the program window</h3>
+        <pre><code>screen(640, 400)
+background("#182033")
+square(60, 80, 70, "#9c8cff")
+circle(220, 120, 35, "#72e0b1")
+text("Hello!", 60, 230, "#ffffff", 28)</code></pre>
         <h3>Change a variable</h3>
         <pre><code>let score = 1
 score = score + 1
@@ -68,6 +74,6 @@ print(score)</code></pre>
       </div>
     </aside>
   </main>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
