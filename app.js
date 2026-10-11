@@ -34,7 +34,12 @@ refreshProjects();
 const starterCode = `// Your first Delta program
 `
 
-const previousCode = localStorage.getItem("delta-code") || "";
+function removeLegacyScreenCommands(source) {
+  return source
+    .replace(/^\s*(?:screen|background)\s*\([^()\r\n]*\)\s*;?\s*$/gm, "")
+    .replace(/\n{3,}/g, "\n\n");
+}
+const previousCode = removeLegacyScreenCommands(localStorage.getItem("delta-code") || "");
 editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
 localStorage.setItem("delta-code", editor.value);
 
@@ -637,7 +642,7 @@ document.getElementById("saveProjectButton").addEventListener("click", saveCurre
 projectSelect.addEventListener("change", () => {
   const name = projectSelect.value, projects = getProjects();
   if (name && Object.prototype.hasOwnProperty.call(projects, name)) {
-    projectName.value = name; editor.value = projects[name];
+    projectName.value = name; editor.value = removeLegacyScreenCommands(projects[name]);
     localStorage.setItem("delta-code", editor.value); updateEditorInfo();
     saveStatus.textContent = "Loaded: " + name;
   }
