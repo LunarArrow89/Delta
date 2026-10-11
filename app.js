@@ -602,7 +602,7 @@ function runCode() {
   try {
     const source = editor.value
       // Convert Delta's own text(:words: + /variable/) syntax into a print expression.
-      .replace(/^([ \\t]*)text\\(\\s*:([^:]*)\\:\\s*(?:\\+\\s*\\/([A-Za-z_][A-Za-z0-9_]*)\\/)?\\s*\\)[ \\t]*$/gm, (_, indent, message, variable) => {
+      .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(?:\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/)?\s*\)[ \t]*$/gm, (_, indent, message, variable) => {
         const textPart = JSON.stringify(message.trimEnd());
         return indent + "print(" + (variable ? textPart + " + String(" + variable + ")" : textPart) + ")";
       })
