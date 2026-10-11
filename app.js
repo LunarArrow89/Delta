@@ -919,7 +919,7 @@ addFileButton.addEventListener("click", () => {
   function addObject() {
     const size = screenSize();
     const id = nextId++;
-    const item = { id, name: fields.name.value.trim() || "Text " + id, text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const item = { id, name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
     objects.push(item);
     selectedId = item.id;
     syncFields();
@@ -934,7 +934,7 @@ addFileButton.addEventListener("click", () => {
     const x = Math.max(0, Math.min(size.width, (clientX - rect.left) / rect.width * size.width));
     const y = Math.max(0, Math.min(size.height, (clientY - rect.top) / rect.height * size.height));
     const id = nextId++;
-    const item = { id, name: fields.name.value.trim() || "Text " + id, text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const item = { id, name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
     objects.push(item); selectedId = item.id; syncFields(); renderObjects();
   }
   textObjectTool.addEventListener("click", () => {
