@@ -993,7 +993,7 @@ addFileButton.addEventListener("click", () => {
   }
   function objectCode(item) {
     const safeText = String(item.text || "").replace(/:/g, "：").replace(/[\r\n]+/g, " ");
-    return "// " + (item.name || "Text " + item.id).replace(/[\r\n]+/g, " ") + "\n" + "text(:" + safeText + ': "color: ' + item.color + ", size: " + item.size + ", x: " + Math.round(item.x) + ", y: " + Math.round(item.y) + '")";
+    return "// " + (item.name || "Text " + item.id).replace(/[\r\n]+/g, " ") + "\n" + "text(:" + safeText + ': "color: ' + item.color + ", size: " + item.size + ", x: " + Math.round(item.x) + ", y: " + Math.round(item.y) + '")';
   }
   function addAt(clientX, clientY) {
     const rect = map.getBoundingClientRect();
