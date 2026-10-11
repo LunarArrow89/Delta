@@ -514,5 +514,6 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 #highlightLayer .syntax-screen-command { color: #ff69b4 !important; }
 #highlightLayer .syntax-shape-command { color: #ff4545 !important; }
 
-/* Shape property words use teal; strings keep their own color. */
-#highlightLayer span.syntax-shape-command { color: #00bcd4 !important; }
+/* Shape property words are red; hex color strings show their chosen color. */
+#highlightLayer span.syntax-shape-command { color: #ff3030 !important; }
+#highlightLayer span.syntax-color-code { -webkit-text-fill-color: initial !important; }
