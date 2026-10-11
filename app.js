@@ -11,7 +11,15 @@ let runtimeWindow = null, runtimeCanvas = null, runtimeContext = null, runtimeLo
 let runtimeScene = [], runtimeBackground = "#000000", runtimeHeldKeys = new Set(), runtimeMovementStarted = false, runtimeLastFrame = 0;
 let runtimeSquareSettings = {x:100,y:100,size:40,speed:3.5};
 const PROJECTS_KEY = "delta-projects";
-function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY) || "{}"); } catch { return {}; } }
+function safeStorageGet(key, fallback = null) {
+  try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; }
+}
+function safeStorageSet(key, value) {
+  try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
+}
+function getProjects() {
+  try { return JSON.parse(safeStorageGet(PROJECTS_KEY, "{}") || "{}"); } catch (_) { return {}; }
+}
 function refreshProjects(selected = "") {
   const projects = getProjects();
   projectSelect.replaceChildren(new Option("Saved projects…", ""));
@@ -23,8 +31,8 @@ function saveCurrentProject() {
   projectName.value = name;
   const projects = getProjects();
   projects[name] = editor.value;
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-  localStorage.setItem("delta-code", editor.value);
+  safeStorageSet(PROJECTS_KEY, JSON.stringify(projects));
+  safeStorageSet("delta-code", editor.value);
   saveStatus.textContent = "Autosaved";
   refreshProjects(name);
   saveStatus.textContent = "Saved: " + name;
@@ -36,9 +44,9 @@ screen(640, 400)
 background("#10131c")
 text:Hello!:`
 
-const previousCode = localStorage.getItem("delta-code") || "";
+const previousCode = safeStorageGet("delta-code", "") || "";
 editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
-localStorage.setItem("delta-code", editor.value);
+safeStorageSet("delta-code", editor.value);
 
 function escapeHighlight(value) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -145,11 +153,11 @@ function updateEditorInfo() {
 editor.addEventListener("input", () => {
   updateEditorInfo();
   try {
-    localStorage.setItem("delta-code", editor.value);
+    safeStorageSet("delta-code", editor.value);
     const name = projectName.value.trim() || "Untitled Project";
     const projects = getProjects();
     projects[name] = editor.value;
-    localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+    safeStorageSet(PROJECTS_KEY, JSON.stringify(projects));
     refreshProjects(name);
     saveStatus.textContent = "Autosaved: " + name;
   } catch (error) {
@@ -678,7 +686,7 @@ projectSelect.addEventListener("change", () => {
   const name = projectSelect.value, projects = getProjects();
   if (name && Object.prototype.hasOwnProperty.call(projects, name)) {
     projectName.value = name; editor.value = projects[name];
-    localStorage.setItem("delta-code", editor.value); updateEditorInfo();
+    safeStorageSet("delta-code", editor.value); updateEditorInfo();
     saveStatus.textContent = "Loaded: " + name;
   }
 });
@@ -689,7 +697,7 @@ document.getElementById("clearButton").addEventListener("click", () => {
 });
 document.getElementById("resetButton").addEventListener("click", () => {
   editor.value = starterCode;
-  localStorage.setItem("delta-code", editor.value);
+  safeStorageSet("delta-code", editor.value);
   updateEditorInfo();
   output.replaceChildren();
   output.innerHTML = "<p class=\"placeholder\">Starter code restored. Press Run when you're ready.</p>";
