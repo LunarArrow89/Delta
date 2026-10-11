@@ -67,7 +67,7 @@ function renderHighlights() {
     const code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
-    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background)\b|\b(square|triangle|rect|circle)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
+    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background)\b|\b(square|triangle|rect|circle|text)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
     let lastIndex = 0;
     let match;
     while ((match = pattern.exec(code)) !== null) {
@@ -464,6 +464,7 @@ class DeltaParser {
     if (name === "triangle") { const moving=args[5]!==undefined&&args[5]!==null; runtimeScene.push({type:"triangle",x:Number(args[0])||0,y:Number(args[1])||0,size:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving,speed:Math.max(0,Number(args[4])||3.5),controls:moving?parseMovementControls(args[5]):defaultMovementControls()}); if(moving)startRuntimeMovement(); drawRuntimeScene(); return null; }
     if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
+    if (name === "drawText") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
     if (name === "text" || name === "rtext") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
     throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, triangle, text, or clear.');
@@ -618,6 +619,17 @@ function runCode() {
       .replace(/^([ \\t]*)ask:(.*):[ \\t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
       .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\s*\)[ \t]*$/gm, (_, indent, message, name) => {
         return indent + "centerText(" + JSON.stringify(message.replace(/\\s+$/, "")) + " + String(" + name + "))";
+      })
+      .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(["'])(.*?)\3\s*\)[ \t]*$/gm, (_, indent, message, quote, properties) => {
+        const getProperty = (key, fallback) => {
+          const match = properties.match(new RegExp("(?:^|,)\\s*" + key + "\\s*:\\s*([^,]+)", "i"));
+          return match ? match[1].trim() : fallback;
+        };
+        const color = getProperty("color", "#ffffff").replace(/^["']|["']$/g, "");
+        const size = Math.max(8, Number(getProperty("size", "24")) || 24);
+        const x = Number(getProperty("x", getProperty("left", "100"))) || 0;
+        const y = Number(getProperty("y", getProperty("top", "100"))) || 0;
+        return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ")";
       })
       .replace(/^([ \t]*)text\((.*)\)[ \t]*$/gm, (_, indent, inside) => {
         const expression = inside
@@ -942,7 +954,8 @@ addFileButton.addEventListener("click", () => {
     renderObjects();
   }
   function objectCode(item) {
-    return "// " + (item.name || "Text " + item.id).replace(/[\r\n]+/g, " ") + "\n" + "rtext(" + JSON.stringify(item.text) + ", " + Math.round(item.x) + ", " + Math.round(item.y) + ", " + JSON.stringify(item.color) + ", " + item.size + ")";
+    const safeText = String(item.text || "").replace(/:/g, "：").replace(/[\r\n]+/g, " ");
+    return "// " + (item.name || "Text " + item.id).replace(/[\r\n]+/g, " ") + "\n" + "text(:" + safeText + ': "color: ' + item.color + ", size: " + item.size + ", x: " + Math.round(item.x) + ", y: " + Math.round(item.y) + '")";
   }
   function addAt(clientX, clientY) {
     const rect = map.getBoundingClientRect();
