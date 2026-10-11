@@ -93,7 +93,7 @@ function renderHighlights() {
       } else {
         const hexColor = match[0].match(/^["'](#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)["']$/);
         if (hexColor) {
-          out += '<span class="syntax-string syntax-color-code" style="color:' + hexColor[1] + '">' + escapeHighlight(match[0]) + '</span>';
+          out += '<span class="syntax-string syntax-color-code" style="color:' + hexColor[1] + ' !important">' + escapeHighlight(match[0]) + '</span>';
         } else {
           out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
         }
