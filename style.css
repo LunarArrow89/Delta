@@ -514,5 +514,5 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 #highlightLayer .syntax-screen-command { color: #ff69b4 !important; }
 #highlightLayer .syntax-shape-command { color: #ff4545 !important; }
 
-/* Shape property words should be teal in the editor. */
-#highlightLayer span.syntax-shape-command { color: #72e0b1 !important; }
+/* Shape property words use teal; strings keep their own color. */
+#highlightLayer span.syntax-shape-command { color: #00bcd4 !important; }
