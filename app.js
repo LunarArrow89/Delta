@@ -634,7 +634,7 @@ function runCode() {
         const x = Number(getProperty("x", "100")) || 0;
         const y = Number(getProperty("y", "100")) || 0;
         return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ")";
-      })
+      });
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
