@@ -640,3 +640,14 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
   tab-size: 2 !important;
 }
 #highlightLayer { pointer-events: none !important; }
+
+/* Safety fallback: keep typed code visible even if syntax highlighting fails. */
+#codeEditor {
+  color: #e6e1ff !important;
+  -webkit-text-fill-color: #e6e1ff !important;
+  caret-color: #00ff88 !important;
+  z-index: 2 !important;
+}
+#highlightLayer {
+  z-index: 1 !important;
+}
