@@ -67,7 +67,7 @@ function renderHighlights() {
     const code = commentAt >= 0 ? line.slice(0, commentAt) : line;
     const comment = commentAt >= 0 ? line.slice(commentAt) : "";
     let out = "";
-    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background)\b|\b(square|triangle|rect|circle|movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
+    const pattern = /:([^:]*):|\/([A-Za-z_][A-Za-z0-9_]*)\/|\b(screen|background)\b|\b(square|triangle|rect|circle)\b|\b(movement|location|size|color|speed)\b|\b(let)(\s+)([A-Za-z_][A-Za-z0-9_]*)?|"[^"]*"|'[^']*'/g;
     let lastIndex = 0;
     let match;
     while ((match = pattern.exec(code)) !== null) {
@@ -85,9 +85,11 @@ function renderHighlights() {
       } else if (match[4] !== undefined) {
         out += '<span class="syntax-shape-command">' + escapeHighlight(match[4]) + '</span>';
       } else if (match[5] !== undefined) {
-        out += '<span class="syntax-keyword">' + escapeHighlight(match[5]) + '</span>';
-        out += escapeHighlight(match[6] || "");
-        if (match[7]) out += '<span class="syntax-variable-name">' + escapeHighlight(match[7]) + '</span>';
+        out += '<span class="syntax-attribute-command">' + escapeHighlight(match[5]) + '</span>';
+      } else if (match[6] !== undefined) {
+        out += '<span class="syntax-keyword">' + escapeHighlight(match[6]) + '</span>';
+        out += escapeHighlight(match[7] || "");
+        if (match[8]) out += '<span class="syntax-variable-name">' + escapeHighlight(match[8]) + '</span>';
       } else {
         const hexColor = match[0].match(/^["'](#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)["']$/);
         if (hexColor) {
