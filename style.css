@@ -508,3 +508,8 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 
 /* Delimiters for text and variable syntax stay white. */
 #highlightLayer .syntax-delimiter { color: #ffffff !important; }
+
+
+/* Delta command syntax colors in the editor. */
+#highlightLayer .syntax-screen-command { color: #ff69b4 !important; }
+#highlightLayer .syntax-shape-command { color: #ff4545 !important; }
