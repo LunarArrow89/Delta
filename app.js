@@ -491,7 +491,7 @@ class DeltaParser {
     if (name === "rect") { runtimeScene.push({type:"rect",x:Number(args[0])||0,y:Number(args[1])||0,width:Math.max(0,Number(args[2])||0),height:Math.max(0,Number(args[3])||0),color:String(args[4]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "drawText") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
-    if (name === "text" || name === "rtext") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
+
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
     throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, triangle, text, or clear.');
   }
@@ -624,28 +624,6 @@ function runCode() {
       .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
       .replace(/^([ \t]*)square\s*\*movement\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "moveSquare(" + args + ")")
       .replace(/^([ \t]*)(rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "rect" ? "moveRect(" : "moveCircle("))
-      .replace(/^([ \t]*)text:\((.*?)\s*:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\)[ \t]*$/gm, (_, indent, message, name) => indent + "centerText(" + JSON.stringify(message.trimEnd() + " ") + " + String(" + name + "))")
-      .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
-        const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
-        let expression = "";
-        parts.forEach((part, index) => {
-          if (index % 2 === 0) {
-            if (part) expression += (expression ? " + " : "") + JSON.stringify(part);
-          } else {
-            expression += (expression ? " + " : "") + "String(" + part + ")";
-          }
-        });
-        return indent + "ask(" + (expression || '""') + ")";
-      })
-      .replace(/^([ \t]*)ask:\((.*?)\)[ \t]*$/gm, (_, indent, inside) => {
-        const joined = inside.match(/^(.*?)\\s*:\\s*\\+\\s*:([A-Za-z_][A-Za-z0-9_]*):\\s*$/);
-        if (joined) return indent + "ask(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
-        return indent + "ask(" + JSON.stringify(inside) + ")";
-      })
-      .replace(/^([ \\t]*)ask:(.*):[ \\t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
-      .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/\s*\)[ \t]*$/gm, (_, indent, message, name) => {
-        return indent + "centerText(" + JSON.stringify(message.replace(/\\s+$/, "")) + " + String(" + name + "))";
-      })
       .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(["'])(.*?)\3\s*\)[ \t]*$/gm, (_, indent, message, quote, properties) => {
         const getProperty = (key, fallback) => {
           const match = properties.match(new RegExp("(?:^|,)\\s*" + key + "\\s*:\\s*([^,]+)", "i"));
@@ -653,17 +631,10 @@ function runCode() {
         };
         const color = getProperty("color", "#ffffff").replace(/^["']|["']$/g, "");
         const size = Math.max(8, Number(getProperty("size", "24")) || 24);
-        const x = Number(getProperty("x", getProperty("left", "100"))) || 0;
-        const y = Number(getProperty("y", getProperty("top", "100"))) || 0;
+        const x = Number(getProperty("x", "100")) || 0;
+        const y = Number(getProperty("y", "100")) || 0;
         return indent + "drawText(" + JSON.stringify(message) + ", " + x + ", " + y + ", " + JSON.stringify(color) + ", " + size + ")";
       })
-      .replace(/^([ \t]*)text\((.*)\)[ \t]*$/gm, (_, indent, inside) => {
-        const expression = inside
-          .replace(/:([^:]*):/g, (_, message) => JSON.stringify(message))
-          .replace(/\/([A-Za-z_][A-Za-z0-9_]*)\//g, (_, name) => "String(" + name + ")");
-        return indent + "centerText(" + expression + ")";
-      })
-      .replace(/^([ \t]*)text:(.*):[ \t]*$/gm, (_, indent, value) => indent + "centerText(" + JSON.stringify(value) + ")");
     const parser = new DeltaParser(tokenize(source), value => addOutput(formatValue(value)));
     parser.run();
     addOutput("✓ Finished in " + Math.round(performance.now() - started) + " ms", "success");
