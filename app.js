@@ -813,12 +813,16 @@ addFileButton.addEventListener("click", () => {
   const map = document.getElementById("objectMap");
   if (!map) return;
   const fields = {
+    name: document.getElementById("objectName"),
     text: document.getElementById("objectText"),
     x: document.getElementById("objectX"),
     y: document.getElementById("objectY"),
     size: document.getElementById("objectFontSize"),
     color: document.getElementById("objectColor")
   };
+  const inspectorEmpty = document.getElementById("inspectorEmpty");
+  const inspectorFields = document.getElementById("inspectorFields");
+  const sceneObjectList = document.getElementById("sceneObjectList");
   const status = document.getElementById("objectEditorStatus");
   const sizeLabel = document.getElementById("mapSizeLabel");
   let objects = [];
@@ -846,28 +850,52 @@ addFileButton.addEventListener("click", () => {
       el.type = "button";
       el.className = "map-text-object" + (item.id === selectedId ? " selected" : "");
       el.textContent = item.text || " ";
+      el.title = item.name || "Text";
       el.style.left = (item.x / size.width * 100) + "%";
       el.style.top = (item.y / size.height * 100) + "%";
       el.style.color = item.color;
       el.style.fontSize = "clamp(8px, " + (item.size / size.height * 100) + "cqh, 42px)";
       el.dataset.objectId = item.id;
       el.addEventListener("pointerdown", event => {
+        if (event.button !== 0) return;
         event.preventDefault();
         selectedId = item.id;
-        syncFields();
         const rect = map.getBoundingClientRect();
-        drag = { id: item.id, rect, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y };
+        drag = { id: item.id, pointerId: event.pointerId, rect, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y };
+        try { map.setPointerCapture(event.pointerId); } catch (_) {}
+        syncFields();
         renderObjects();
       });
       map.appendChild(el);
     }
     const hint = document.getElementById("mapHint");
     if (hint) hint.style.display = objects.length ? "none" : "block";
+    if (sceneObjectList) {
+      sceneObjectList.replaceChildren();
+      if (!objects.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty-object-list";
+        empty.textContent = "No objects yet";
+        sceneObjectList.appendChild(empty);
+      } else {
+        for (const item of objects) {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = "scene-object-item" + (item.id === selectedId ? " active" : "");
+          row.textContent = item.name || "Text";
+          row.addEventListener("click", () => { selectedId = item.id; syncFields(); renderObjects(); });
+          sceneObjectList.appendChild(row);
+        }
+      }
+    }
+    if (inspectorEmpty) inspectorEmpty.hidden = !!selected();
+    if (inspectorFields) inspectorFields.hidden = !selected();
     status.textContent = objects.length ? objects.length + " text object" + (objects.length === 1 ? "" : "s") + (selectedId ? " · selected" : "") : "No text objects yet.";
   }
   function syncFields() {
     const item = selected();
     if (!item) return;
+    fields.name.value = item.name || "Text " + item.id;
     fields.text.value = item.text;
     fields.x.value = Math.round(item.x);
     fields.y.value = Math.round(item.y);
@@ -878,6 +906,7 @@ addFileButton.addEventListener("click", () => {
     const item = selected();
     if (!item) { status.textContent = "Add or select a text object first."; return; }
     const size = screenSize();
+    item.name = fields.name.value.trim() || "Text " + item.id;
     item.text = fields.text.value;
     item.x = Math.max(0, Math.min(size.width, Number(fields.x.value) || 0));
     item.y = Math.max(0, Math.min(size.height, Number(fields.y.value) || 0));
@@ -889,21 +918,23 @@ addFileButton.addEventListener("click", () => {
   }
   function addObject() {
     const size = screenSize();
-    const item = { id: nextId++, text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const id = nextId++;
+    const item = { id, name: fields.name.value.trim() || "Text " + id, text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
     objects.push(item);
     selectedId = item.id;
     syncFields();
     renderObjects();
   }
   function objectCode(item) {
-    return "rtext(" + JSON.stringify(item.text) + ", " + Math.round(item.x) + ", " + Math.round(item.y) + ", " + JSON.stringify(item.color) + ", " + item.size + ")";
+    return "// " + (item.name || "Text " + item.id).replace(/[\r\n]+/g, " ") + "\n" + "rtext(" + JSON.stringify(item.text) + ", " + Math.round(item.x) + ", " + Math.round(item.y) + ", " + JSON.stringify(item.color) + ", " + item.size + ")";
   }
   function addAt(clientX, clientY) {
     const rect = map.getBoundingClientRect();
     const size = screenSize();
     const x = Math.max(0, Math.min(size.width, (clientX - rect.left) / rect.width * size.width));
     const y = Math.max(0, Math.min(size.height, (clientY - rect.top) / rect.height * size.height));
-    const item = { id: nextId++, text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const id = nextId++;
+    const item = { id, name: fields.name.value.trim() || "Text " + id, text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
     objects.push(item); selectedId = item.id; syncFields(); renderObjects();
   }
   textObjectTool.addEventListener("click", () => {
@@ -945,7 +976,7 @@ addFileButton.addEventListener("click", () => {
     status.textContent = "Inserted: " + code;
   });
   map.addEventListener("pointermove", event => {
-    if (!drag) return;
+    if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
     const item = objects.find(entry => entry.id === drag.id);
     if (!item) return;
     const size = screenSize();
@@ -955,9 +986,18 @@ addFileButton.addEventListener("click", () => {
     fields.y.value = Math.round(item.y);
     renderObjects();
   });
-  map.addEventListener("pointerup", () => { drag = null; });
+  map.addEventListener("pointerup", event => {
+    if (!drag || (drag.pointerId != null && event.pointerId !== drag.pointerId)) return;
+    drag = null;
+    try { if (map.hasPointerCapture(event.pointerId)) map.releasePointerCapture(event.pointerId); } catch (_) {}
+  });
   map.addEventListener("pointercancel", () => { drag = null; });
-  for (const field of Object.values(fields)) field.addEventListener("keydown", event => { if (event.key === "Enter") applyFields(); });
+  for (const field of Object.values(fields)) {
+    field.addEventListener("input", () => {
+      if (field === fields.text || field === fields.color || field === fields.size || field === fields.name) applyFields();
+    });
+    field.addEventListener("keydown", event => { if (event.key === "Enter") applyFields(); });
+  }
   editor.addEventListener("input", updateMapSize);
   updateMapSize();
 })();
