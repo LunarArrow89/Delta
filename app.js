@@ -525,7 +525,7 @@ function drawRuntimeScene() {
     else if(s.type==="rect")runtimeContext.fillRect(s.x,s.y,s.width,s.height);
     else if(s.type==="circle"){runtimeContext.beginPath();runtimeContext.arc(s.x,s.y,s.radius,0,Math.PI*2);runtimeContext.fill();}
     else if(s.type==="triangle"){runtimeContext.beginPath();runtimeContext.moveTo(s.x+s.size/2,s.y);runtimeContext.lineTo(s.x+s.size,s.y+s.size);runtimeContext.lineTo(s.x,s.y+s.size);runtimeContext.closePath();runtimeContext.fill();}
-    else if(s.type==="text"){runtimeContext.font=s.size+"px system-ui,sans-serif";runtimeContext.fillText(s.value,s.x,s.y);}
+    else if(s.type==="text"){runtimeContext.font=s.size+"px system-ui,sans-serif";runtimeContext.textBaseline="top";runtimeContext.fillText(s.value,s.x,s.y);runtimeContext.textBaseline="alphabetic";}
     else if(s.type==="centerText"){runtimeContext.font="28px system-ui,sans-serif";runtimeContext.textAlign="center";runtimeContext.textBaseline="middle";runtimeContext.fillText(s.value,runtimeCanvas.width/2,runtimeCanvas.height/2);runtimeContext.textAlign="start";runtimeContext.textBaseline="alphabetic";}
   }
 }
