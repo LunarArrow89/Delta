@@ -857,7 +857,6 @@ addFileButton.addEventListener("click", () => {
         syncFields();
         const rect = map.getBoundingClientRect();
         drag = { id: item.id, rect, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y };
-        el.setPointerCapture?.(event.pointerId);
         renderObjects();
       });
       map.appendChild(el);
@@ -899,7 +898,32 @@ addFileButton.addEventListener("click", () => {
   function objectCode(item) {
     return "rtext(" + JSON.stringify(item.text) + ", " + Math.round(item.x) + ", " + Math.round(item.y) + ", " + JSON.stringify(item.color) + ", " + item.size + ")";
   }
-  document.getElementById("addTextObject").addEventListener("click", addObject);
+  function addAt(clientX, clientY) {
+    const rect = map.getBoundingClientRect();
+    const size = screenSize();
+    const x = Math.max(0, Math.min(size.width, (clientX - rect.left) / rect.width * size.width));
+    const y = Math.max(0, Math.min(size.height, (clientY - rect.top) / rect.height * size.height));
+    const item = { id: nextId++, text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    objects.push(item); selectedId = item.id; syncFields(); renderObjects();
+  }
+  textObjectTool.addEventListener("click", () => {
+    const rect = map.getBoundingClientRect();
+    addAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  });
+  textObjectTool.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); textObjectTool.click(); }
+  });
+  textObjectTool.addEventListener("dragstart", event => {
+    event.dataTransfer.setData("application/x-delta-object", "Text");
+    event.dataTransfer.setData("text/plain", "Text");
+    event.dataTransfer.effectAllowed = "copy";
+  });
+  map.addEventListener("dragover", event => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; map.classList.add("drop-target"); });
+  map.addEventListener("dragleave", event => { if (!map.contains(event.relatedTarget)) map.classList.remove("drop-target"); });
+  map.addEventListener("drop", event => {
+    event.preventDefault(); map.classList.remove("drop-target");
+    if (event.dataTransfer.getData("application/x-delta-object") === "Text" || event.dataTransfer.getData("text/plain") === "Text") addAt(event.clientX, event.clientY);
+  });
   document.getElementById("applyObject").addEventListener("click", applyFields);
   document.getElementById("removeObject").addEventListener("click", () => {
     objects = objects.filter(item => item.id !== selectedId);
