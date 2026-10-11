@@ -613,3 +613,10 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .map-text-object:active { cursor: grabbing; }
 .scene-object-item { width: 100%; text-align: left; }
 .scene-object-item.active { border-color: var(--accent); background: rgba(156, 140, 255, 0.14); }
+
+
+/* Keep the Delta- inspector visibility explicit across browsers. */
+#inspectorFields[hidden],
+#inspectorEmpty[hidden] { display: none !important; }
+#inspectorFields:not([hidden]) { display: flex !important; }
+#inspectorEmpty:not([hidden]) { display: flex !important; }
