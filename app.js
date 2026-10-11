@@ -888,13 +888,29 @@ addFileButton.addEventListener("click", () => {
         }
       }
     }
-    if (inspectorEmpty) inspectorEmpty.hidden = !!selected();
-    if (inspectorFields) inspectorFields.hidden = !selected();
-    status.textContent = objects.length ? objects.length + " text object" + (objects.length === 1 ? "" : "s") + (selectedId ? " · selected" : "") : "No text objects yet.";
+    const hasSelection = Boolean(selected());
+    if (inspectorEmpty) {
+      inspectorEmpty.hidden = hasSelection;
+      inspectorEmpty.style.display = hasSelection ? "none" : "flex";
+    }
+    if (inspectorFields) {
+      inspectorFields.hidden = !hasSelection;
+      inspectorFields.style.display = hasSelection ? "flex" : "none";
+    }
+    if (hasSelection) syncFields();
+    status.textContent = objects.length ? objects.length + " text object" + (objects.length === 1 ? "" : "s") + (hasSelection ? " · selected" : "") : "No text objects yet.";
   }
   function syncFields() {
     const item = selected();
     if (!item) return;
+    if (inspectorEmpty) {
+      inspectorEmpty.hidden = true;
+      inspectorEmpty.style.display = "none";
+    }
+    if (inspectorFields) {
+      inspectorFields.hidden = false;
+      inspectorFields.style.display = "flex";
+    }
     fields.name.value = item.name || "Text " + item.id;
     fields.text.value = item.text;
     fields.x.value = Math.round(item.x);
