@@ -552,3 +552,56 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .object-editor-note,.object-editor-status { margin:4px 0 0; color:var(--muted); font-size:11px; line-height:1.5; overflow-wrap:anywhere; }
 .object-editor-status { color:#a9e8cf; }
 @media(max-width:700px) { .object-editor { padding:0 10px; } .object-editor-layout { grid-template-columns:1fr; padding:10px; } .object-editor-heading { padding:13px; } .object-editor-heading p { max-width:220px; line-height:1.5; } .object-map { max-height:none; } }
+
+/* GameMaker-style object placement workspace */
+.object-editor { max-width:1568px; margin:28px auto 30px; padding:0 16px; color:var(--text); }
+.object-editor-heading { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:15px 18px; background:#191b25; border:1px solid #343746; border-bottom:0; border-radius:10px 10px 0 0; }
+.object-editor-heading strong { font-size:13px; letter-spacing:1.5px; }
+.object-editor-heading p { margin:5px 0 0; color:#969db1; font-size:12px; }
+.maker-toolbar { display:flex; align-items:center; gap:12px; color:#aeb5c8; font-size:12px; white-space:nowrap; }
+.maker-workspace { display:grid; grid-template-columns:180px minmax(0,1fr) 235px; min-height:380px; border:1px solid #343746; border-radius:0 0 10px 10px; overflow:hidden; background:#11131b; }
+.maker-sidebar { min-width:0; padding:13px 10px; background:#191b25; }
+.maker-palette { border-right:1px solid #343746; }
+.maker-inspector { border-left:1px solid #343746; }
+.maker-panel-title { margin:0 0 12px; color:#939bb0; font-size:10px; font-weight:800; letter-spacing:1.3px; }
+.object-tool { display:flex; align-items:center; gap:9px; padding:9px 7px; background:#242735; border:1px solid #41475b; border-radius:6px; cursor:grab; user-select:none; }
+.object-tool:active { cursor:grabbing; }
+.text-tool-icon,.scene-row-icon { display:grid; place-items:center; flex:0 0 30px; width:30px; height:30px; border-radius:5px; color:#d5c8ff; background:#51437c; font-size:18px; font-weight:800; }
+.object-tool strong,.inspector-object-type strong { display:block; font-size:12px; }
+.object-tool small,.inspector-object-type small { display:block; margin-top:3px; color:#959cb0; font-size:10px; }
+.tool-grip { margin-left:auto; color:#838ba1; }
+.palette-tip { color:#81899e; font-size:10px; line-height:1.6; }
+.object-list-title { margin-top:24px; }
+.scene-object-list { display:flex; flex-direction:column; gap:4px; }
+.empty-object-list { color:#747d93; font-size:11px; }
+.scene-object-row { display:flex; align-items:center; gap:8px; width:100%; padding:6px; border:1px solid transparent; border-radius:5px; background:transparent; color:#c8cddd; text-align:left; cursor:pointer; }
+.scene-object-row.active { background:#2b2b40; border-color:#6854a5; }
+.scene-row-icon { flex-basis:23px; width:23px; height:23px; font-size:13px; }
+.scene-row-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
+.maker-stage-area { display:flex; flex-direction:column; min-width:0; padding:12px; background:#10121a; }
+.stage-toolbar,.stage-footer { display:flex; justify-content:space-between; gap:10px; color:#858da3; font-size:10px; }
+.stage-toolbar { margin-bottom:12px; font-weight:700; letter-spacing:.6px; }
+.stage-dot { display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:50%; background:#9b83ff; }
+.object-map-wrap { width:100%; margin:auto 0; }
+.object-map { max-height:580px; background-color:#151925; background-image:linear-gradient(#373d4d55 1px,transparent 1px),linear-gradient(90deg,#373d4d55 1px,transparent 1px); background-size:5% 5%; border:1px solid #464d60; border-radius:3px; box-shadow:0 8px 24px #0003; }
+.object-map.drop-target { outline:2px solid #9c83ff; outline-offset:3px; background-color:#1e2031; }
+.map-hint { color:#737d94; font-size:12px; }
+.map-text-object { cursor:move; user-select:none; }
+.stage-footer { margin-top:12px; }
+.object-properties { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.object-properties[hidden],.inspector-empty[hidden] { display:none !important; }
+.object-properties label { color:#aab2c7; font-size:10px; font-weight:700; }
+.object-properties input { width:100%; min-width:0; padding:9px; color:#e8eaf3; background:#10121a; border:1px solid #3a4053; border-radius:5px; font-size:12px; box-sizing:border-box; }
+.object-properties input[type=color] { height:34px; padding:3px; }
+.property-pair { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.property-pair>div { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.inspector-empty { display:flex; flex-direction:column; align-items:center; gap:8px; padding:25px 10px; color:#8c94a9; text-align:center; }
+.inspector-empty>span { display:grid; place-items:center; width:38px; height:38px; border:1px solid #3c4255; border-radius:8px; font-size:20px; }
+.inspector-empty strong { font-size:11px; color:#c1c7d7; }
+.inspector-empty small { font-size:10px; line-height:1.6; }
+.inspector-object-type { display:flex; align-items:center; gap:9px; margin-bottom:8px; padding-bottom:12px; border-bottom:1px solid #343746; }
+.object-properties>button { width:100%; padding:9px; font-size:11px; }
+.remove-object-button { color:#ffabb2 !important; }
+.object-editor-note { color:#858da3; font-size:10px; line-height:1.6; }
+@media(max-width:850px) { .maker-workspace { grid-template-columns:145px minmax(0,1fr); } .maker-inspector { grid-column:1/-1; border-left:0; border-top:1px solid #343746; } .inspector-empty { padding:14px; } .maker-toolbar { gap:6px; } }
+@media(max-width:560px) { .object-editor { padding:0 8px; } .object-editor-heading { align-items:flex-start; padding:12px; } .object-editor-heading p { max-width:210px; line-height:1.5; } .maker-toolbar { flex-direction:column; align-items:flex-end; font-size:10px; } .maker-toolbar button { padding:8px; font-size:10px; } .maker-workspace { grid-template-columns:95px minmax(0,1fr); } .maker-sidebar { padding:10px 6px; } .object-tool { flex-wrap:wrap; gap:5px; padding:6px 4px; } .object-tool .text-tool-icon { flex-basis:24px; width:24px; height:24px; } .object-tool small { display:none; } .tool-grip { display:none; } .palette-tip { font-size:9px; } .stage-toolbar,.stage-footer { font-size:9px; } .maker-stage-area { padding:8px 5px; } .object-map { max-height:none; } }
