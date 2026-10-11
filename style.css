@@ -641,13 +641,16 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 }
 #highlightLayer { pointer-events: none !important; }
 
-/* Safety fallback: keep typed code visible even if syntax highlighting fails. */
+/* Keep the textarea editable while the syntax-colored layer shows through. */
 #codeEditor {
-  color: #e6e1ff !important;
-  -webkit-text-fill-color: #e6e1ff !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
   caret-color: #00ff88 !important;
+  background: transparent !important;
   z-index: 2 !important;
 }
 #highlightLayer {
+  color: #e6e1ff;
   z-index: 1 !important;
+  pointer-events: none !important;
 }
