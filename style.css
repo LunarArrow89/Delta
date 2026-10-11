@@ -620,3 +620,23 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 #inspectorEmpty[hidden] { display: none !important; }
 #inspectorFields:not([hidden]) { display: flex !important; }
 #inspectorEmpty:not([hidden]) { display: flex !important; }
+
+/* Keep Delta code input left-to-right so the caret and inserted characters stay aligned. */
+#codeEditor,
+#highlightLayer {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-indent: 0 !important;
+  font-kerning: none !important;
+  font-variant-ligatures: none !important;
+  tab-size: 2 !important;
+}
+#highlightLayer { pointer-events: none !important; }
