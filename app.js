@@ -42,7 +42,7 @@ refreshProjects();
 const starterCode = `// Your first Delta program
 screen(640, 400)
 background("#10131c")
-text:Hello!:`
+text(:Hello!:)`
 
 const previousCode = safeStorageGet("delta-code", "") || "";
 editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
@@ -601,6 +601,11 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
+      // Convert Delta's own text(:words: + /variable/) syntax into a print expression.
+      .replace(/^([ \\t]*)text\\(\\s*:([^:]*)\\:\\s*(?:\\+\\s*\\/([A-Za-z_][A-Za-z0-9_]*)\\/)?\\s*\\)[ \\t]*$/gm, (_, indent, message, variable) => {
+        const textPart = JSON.stringify(message.trimEnd());
+        return indent + "print(" + (variable ? textPart + " + String(" + variable + ")" : textPart) + ")";
+      })
       // Allow simple one-line indented-style conditions without requiring braces.
       .replace(/^([ \t]*)if(\d*)\s+(.+?)\s*\r?\n([ \t]*)([^\r\n]+)$/gm, (whole, indent, number, condition, nextIndent, nextLine) => {
         if (condition.includes("{") || nextLine.trim().startsWith("else")) return whole;
