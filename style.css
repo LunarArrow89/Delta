@@ -656,10 +656,43 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 }
 
 
-/* Ensure the editable textarea itself remains readable if the highlight overlay is disabled. */
-#codeEditor {
-  color: #e6e1ff !important;
-  -webkit-text-fill-color: #e6e1ff !important;
-  caret-color: var(--green) !important;
+
+/* Restore Delta syntax colors while keeping the editable text and caret aligned. */
+.editor-wrap {
+  position: relative;
+  isolation: isolate;
 }
-#highlightLayer { display: none !important; }
+#highlightLayer {
+  display: block !important;
+  position: absolute;
+  z-index: 1 !important;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 42px !important;
+  width: auto !important;
+  height: 100%;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  background: transparent !important;
+  color: #e6e1ff;
+}
+#codeEditor {
+  position: relative;
+  z-index: 2 !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  caret-color: #00ff88 !important;
+  background: transparent !important;
+}
+#codeEditor::selection {
+  background: rgba(156, 140, 255, 0.35) !important;
+  -webkit-text-fill-color: transparent !important;
+}
+#highlightLayer .syntax-shape-command { color: #ff3030 !important; }
+#highlightLayer .syntax-attribute-command { color: #7dd3fc !important; }
+#highlightLayer .syntax-text-content { color: #72e0b1 !important; }
+#highlightLayer .syntax-variable { color: #ffd866 !important; }
+#highlightLayer .syntax-delimiter { color: #ffffff !important; }
+#highlightLayer .syntax-screen-command { color: #ff69b4 !important; }
+#highlightLayer .syntax-comment { color: #737b8d !important; font-style: italic; }
