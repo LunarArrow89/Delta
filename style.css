@@ -522,3 +522,7 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 /* Shape names are red; their attributes stay teal. */
 #highlightLayer span.syntax-shape-command { color: #ff3030 !important; }
 #highlightLayer span.syntax-attribute-command { color: #72e0b1 !important; }
+
+
+/* Attributes should be light blue. */
+#highlightLayer span.syntax-attribute-command { color: #7dd3fc !important; }
