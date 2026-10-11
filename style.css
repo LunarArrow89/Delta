@@ -605,3 +605,11 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .object-editor-note { color:#858da3; font-size:10px; line-height:1.6; }
 @media(max-width:850px) { .maker-workspace { grid-template-columns:145px minmax(0,1fr); } .maker-inspector { grid-column:1/-1; border-left:0; border-top:1px solid #343746; } .inspector-empty { padding:14px; } .maker-toolbar { gap:6px; } }
 @media(max-width:560px) { .object-editor { padding:0 8px; } .object-editor-heading { align-items:flex-start; padding:12px; } .object-editor-heading p { max-width:210px; line-height:1.5; } .maker-toolbar { flex-direction:column; align-items:flex-end; font-size:10px; } .maker-toolbar button { padding:8px; font-size:10px; } .maker-workspace { grid-template-columns:95px minmax(0,1fr); } .maker-sidebar { padding:10px 6px; } .object-tool { flex-wrap:wrap; gap:5px; padding:6px 4px; } .object-tool .text-tool-icon { flex-basis:24px; width:24px; height:24px; } .object-tool small { display:none; } .tool-grip { display:none; } .palette-tip { font-size:9px; } .stage-toolbar,.stage-footer { font-size:9px; } .maker-stage-area { padding:8px 5px; } .object-map { max-height:none; } }
+
+
+/* Delta- map editor interaction fixes */
+.object-map { touch-action: none; }
+.map-text-object { touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+.map-text-object:active { cursor: grabbing; }
+.scene-object-item { width: 100%; text-align: left; }
+.scene-object-item.active { border-color: var(--accent); background: rgba(156, 140, 255, 0.14); }
