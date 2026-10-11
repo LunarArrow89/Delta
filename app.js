@@ -8,7 +8,7 @@ const projectName = document.getElementById("projectName");
 const projectSelect = document.getElementById("projectSelect");
 const saveStatus = document.getElementById("saveStatus");
 let runtimeWindow = null, runtimeCanvas = null, runtimeContext = null, runtimeLog = null;
-let runtimeScene = [], runtimeBackground = "#000000", runtimeHeldKeys = new Set(), runtimeMovementStarted = false, runtimeLastFrame = 0;
+let runtimeScene = [], runtimeMapScene = [], runtimeBackground = "#151925", runtimeHeldKeys = new Set(), runtimeMovementStarted = false, runtimeLastFrame = 0;
 let runtimeSquareSettings = {x:100,y:100,size:40,speed:3.5};
 const PROJECTS_KEY = "delta-projects";
 function getProjects() { try { return JSON.parse(localStorage.getItem(PROJECTS_KEY) || "{}"); } catch { return {}; } }
@@ -32,9 +32,7 @@ function saveCurrentProject() {
 refreshProjects();
 
 const starterCode = `// Your first Delta program
-screen(640, 400)
-background("#10131c")
-text:Hello!:`
+`
 
 const previousCode = localStorage.getItem("delta-code") || "";
 editor.value = previousCode.includes('print("Welcome to Delta!")') ? starterCode : (previousCode || starterCode);
@@ -427,8 +425,6 @@ class DeltaParser {
       if (!prompt) { prompt = runtimeWindow.document.createElement("div"); prompt.id = "delta-ask-prompt"; prompt.style.cssText = "position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:90vw;padding:14px 20px;border-radius:12px;background:#24202e;color:#e8d8ff;border:1px solid #a879d8;font:16px system-ui,sans-serif;text-align:center;z-index:9999"; runtimeWindow.document.body.appendChild(prompt); }
       prompt.textContent = String(args[0] ?? ""); return null;
     }
-    if (name === "screen") { if (!runtimeCanvas) throw new Error("The game screen is not available. Press Run again."); runtimeCanvas.width=Math.max(100,Math.min(1600,Number(args[0])||640)); runtimeCanvas.height=Math.max(100,Math.min(1200,Number(args[1])||400)); drawRuntimeScene(); return null; }
-    if (name === "background") { runtimeBackground=String(args[0]??"#ffffff"); runtimeScene=[]; drawRuntimeScene(); return null; }
     if (name === "centerText") { runtimeScene.push({type:"centerText",value:String(args[0]??"")}); drawRuntimeScene(); return null; }
     if (name === "setSquareSize") { runtimeSquareSettings.size = Math.max(0, Number(args[0]) || 0); return null; }
     if (name === "setSquareLocation") { runtimeSquareSettings.x = Number(args[0]) || 0; runtimeSquareSettings.y = Number(args[1]) || 0; return null; }
@@ -466,7 +462,7 @@ class DeltaParser {
     if (name === "circle") { runtimeScene.push({type:"circle",x:Number(args[0])||0,y:Number(args[1])||0,radius:Math.max(0,Number(args[2])||0),color:String(args[3]??"#ffffff"),moving:false,speed:0,controls:defaultMovementControls()}); drawRuntimeScene(); return null; }
     if (name === "text" || name === "rtext") { runtimeScene.push({type:"text",value:String(args[0]??""),x:Number(args[1])||0,y:Number(args[2])||0,color:String(args[3]??"#ffffff"),size:Math.max(8,Number(args[4])||24)}); drawRuntimeScene(); return null; }
     if (name === "clear") { runtimeScene=[]; drawRuntimeScene(); return null; }
-    throw new Error('Unknown function "'+name+'". Use screen, background, square, rect, circle, triangle, text, or clear.');
+    throw new Error('Unknown function "'+name+'". Use square, rect, circle, triangle, text, or clear.');
   }
   truthy(value) { return Boolean(value); }
 }
@@ -493,7 +489,7 @@ function addOutput(text, type = "") {
 function drawRuntimeScene() {
   if(!runtimeCanvas||!runtimeContext)return;
   runtimeContext.fillStyle=runtimeBackground; runtimeContext.fillRect(0,0,runtimeCanvas.width,runtimeCanvas.height);
-  for(const s of runtimeScene){runtimeContext.fillStyle=s.color||"#ffffff";
+  for(const s of [...runtimeMapScene, ...runtimeScene]){runtimeContext.fillStyle=s.color||"#ffffff";
     if(s.type==="square")runtimeContext.fillRect(s.x,s.y,s.size,s.size);
     else if(s.type==="rect")runtimeContext.fillRect(s.x,s.y,s.width,s.height);
     else if(s.type==="circle"){runtimeContext.beginPath();runtimeContext.arc(s.x,s.y,s.radius,0,Math.PI*2);runtimeContext.fill();}
@@ -546,14 +542,16 @@ function startRuntimeMovement(){
 function openRuntimeWindow(){
   runtimeWindow=window.open("","DeltaProgramWindow","popup,width=900,height=650,resizable=yes,scrollbars=yes");
   if(!runtimeWindow){addOutput("Allow pop-ups for this site so Delta can open your program in a new window.","error");runStatus.textContent="Popup blocked";return false;}
-  runtimeScene=[];runtimeBackground="#000000";runtimeMovementStarted=false;runtimeLastFrame=0;runtimeHeldKeys=new Set();runtimeSquareSettings={x:100,y:100,size:40,speed:3.5};
+  runtimeScene=[];runtimeMapScene=[];runtimeBackground="#151925";runtimeMovementStarted=false;runtimeLastFrame=0;runtimeHeldKeys=new Set();runtimeSquareSettings={x:100,y:100,size:40,speed:3.5};
   runtimeWindow.document.open();runtimeWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delta Game</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}canvas{display:block;width:100vw;height:100vh;background:#000}</style></head><body><canvas id="screen" width="640" height="400"></canvas></body></html>');runtimeWindow.document.close();
   runtimeCanvas=runtimeWindow.document.getElementById("screen");runtimeContext=runtimeCanvas.getContext("2d");runtimeLog=null;return true;
 }
 function runCode() {
   output.replaceChildren();
   runStatus.textContent = "Running…";
-  openRuntimeWindow();
+  if (!openRuntimeWindow()) return;
+  runtimeMapScene = typeof window.getDeltaMapObjects === "function" ? window.getDeltaMapObjects() : [];
+  drawRuntimeScene();
   const started = performance.now();
   try {
     const source = editor.value
@@ -829,10 +827,7 @@ addFileButton.addEventListener("click", () => {
   let selectedId = null;
   let nextId = 1;
   let drag = null;
-  const screenSize = () => {
-    const screenLine = editor.value.match(/^\s*screen\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/m);
-    return { width: Number(screenLine?.[1]) || 640, height: Number(screenLine?.[2]) || 400 };
-  };
+  const screenSize = () => ({ width: 640, height: 400 });
   function updateMapSize() {
     const size = screenSize();
     sizeLabel.textContent = size.width + " × " + size.height;
@@ -842,6 +837,7 @@ addFileButton.addEventListener("click", () => {
     renderObjects();
   }
   function selected() { return objects.find(item => item.id === selectedId); }
+  window.getDeltaMapObjects = () => objects.map(item => ({ type: "text", value: item.text, x: item.x, y: item.y, color: item.color, size: item.size }));
   function renderObjects() {
     map.querySelectorAll(".map-text-object").forEach(el => el.remove());
     const size = screenSize();
