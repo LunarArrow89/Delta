@@ -89,7 +89,12 @@ function renderHighlights() {
         out += escapeHighlight(match[6] || "");
         if (match[7]) out += '<span class="syntax-variable-name">' + escapeHighlight(match[7]) + '</span>';
       } else {
-        out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
+        const hexColor = match[0].match(/^["'](#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)["']$/);
+        if (hexColor) {
+          out += '<span class="syntax-string syntax-color-code" style="color:' + hexColor[1] + '">' + escapeHighlight(match[0]) + '</span>';
+        } else {
+          out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
+        }
       }
       lastIndex = match.index + match[0].length;
     }
