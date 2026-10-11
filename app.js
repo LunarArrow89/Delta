@@ -91,11 +91,37 @@ function renderHighlights() {
         out += escapeHighlight(match[7] || "");
         if (match[8]) out += '<span class="syntax-variable-name">' + escapeHighlight(match[8]) + '</span>';
       } else {
-        const hexColor = match[0].match(/^["'](#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)["']$/);
-        if (hexColor) {
-          out += '<span class="syntax-string syntax-color-code" style="color:' + hexColor[1] + ' !important; -webkit-text-fill-color:' + hexColor[1] + ' !important">' + escapeHighlight(match[0]) + '</span>';
+        const propertyString = match[0].match(/^(['"])(.*)\1$/);
+        if (propertyString && /(?:^|,)\s*(?:color|size|x|y|left|top)\s*:/i.test(propertyString[2])) {
+          out += '<span class="syntax-string">' + escapeHighlight(propertyString[1]);
+          const parts = propertyString[2].split(/(,\s*)/);
+          for (const part of parts) {
+            if (/^,\s*$/.test(part)) {
+              out += escapeHighlight(part);
+              continue;
+            }
+            const property = part.match(/^(\s*)([A-Za-z_]+)(\s*:\s*)(.*)$/);
+            if (!property) {
+              out += escapeHighlight(part);
+              continue;
+            }
+            out += escapeHighlight(property[1]);
+            out += '<span class="syntax-attribute-command">' + escapeHighlight(property[2]) + '</span>';
+            out += escapeHighlight(property[3]);
+            const value = property[4];
+            const hexColor = value.match(/^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/);
+            out += hexColor
+              ? '<span class="syntax-color-code" style="color:' + hexColor[0] + ' !important; -webkit-text-fill-color:' + hexColor[0] + ' !important">' + escapeHighlight(value) + '</span>'
+              : escapeHighlight(value);
+          }
+          out += '<span class="syntax-string">' + escapeHighlight(propertyString[1]) + '</span>';
         } else {
-          out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
+          const hexColor = match[0].match(/^["'](#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)["']$/);
+          if (hexColor) {
+            out += '<span class="syntax-string syntax-color-code" style="color:' + hexColor[1] + ' !important; -webkit-text-fill-color:' + hexColor[1] + ' !important">' + escapeHighlight(match[0]) + '</span>';
+          } else {
+            out += '<span class="syntax-string">' + escapeHighlight(match[0]) + '</span>';
+          }
         }
       }
       lastIndex = match.index + match[0].length;
