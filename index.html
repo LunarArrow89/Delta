@@ -51,6 +51,29 @@
     </section>
 
   </main>
-  <script src="app.js?v=58"></script>
+  <section class="object-editor" aria-label="Object editor">
+    <div class="object-editor-heading">
+      <div><span class="status-dot"></span> <strong>OBJECT EDITOR</strong><p>Place text anywhere on your game screen. Drag it to move it.</p></div>
+      <button id="addTextObject" class="run-button" type="button">+ Add rtext</button>
+    </div>
+    <div class="object-editor-layout">
+      <div class="object-map-wrap">
+        <div class="object-map-label"><span>SCREEN MAP</span><span id="mapSizeLabel">640 × 400</span></div>
+        <div id="objectMap" class="object-map" role="application" aria-label="Game screen map">
+          <div class="map-hint" id="mapHint">Add text, then drag it anywhere on this map.</div>
+        </div>
+      </div>
+      <div class="object-properties">
+        <label for="objectText">Text</label><input id="objectText" value="Hello, world!" maxlength="200">
+        <div class="property-pair"><div><label for="objectX">X</label><input id="objectX" type="number" min="0" value="100"></div><div><label for="objectY">Y</label><input id="objectY" type="number" min="0" value="100"></div></div>
+        <div class="property-pair"><div><label for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="8" max="120" value="24"></div><div><label for="objectColor">Color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
+        <div class="object-actions"><button id="applyObject" class="quiet-button" type="button">Apply changes</button><button id="removeObject" class="quiet-button" type="button">Remove</button></div>
+        <button id="insertObjectCode" class="run-button insert-code-button" type="button">Insert rtext into code</button>
+        <p class="object-editor-note">Coordinates use the top-left of the game screen as (0, 0). Text is positioned by its baseline, just like canvas text.</p>
+        <div id="objectEditorStatus" class="object-editor-status" aria-live="polite">No text objects yet.</div>
+      </div>
+    </div>
+  </section>
+  <script src="app.js?v=59"></script>
 </body>
 </html>
