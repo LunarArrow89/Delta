@@ -513,3 +513,7 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 /* Delta command syntax colors in the editor. */
 #highlightLayer .syntax-screen-command { color: #ff69b4 !important; }
 #highlightLayer .syntax-shape-command { color: #ff4545 !important; }
+
+
+/* Force shape description words to display in red in the editor. */
+#highlightLayer span.syntax-shape-command { color: #ff3030 !important; }
