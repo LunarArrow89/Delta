@@ -51,29 +51,38 @@
     </section>
 
   </main>
-  <section class="object-editor" aria-label="Object editor">
+  <section class="object-editor" aria-label="Delta game maker">
     <div class="object-editor-heading">
-      <div><span class="status-dot"></span> <strong>OBJECT EDITOR</strong><p>Place text anywhere on your game screen. Drag it to move it.</p></div>
-      <button id="addTextObject" class="run-button" type="button">+ Add rtext</button>
+      <div><span class="status-dot"></span> <strong>GAME MAKER</strong><p>Drag objects onto the screen map, then move them into position.</p></div>
+      <div class="maker-toolbar"><span id="mapSizeLabel">640 × 400</span><button id="insertObjectCode" class="run-button" type="button">Insert into code</button></div>
     </div>
-    <div class="object-editor-layout">
-      <div class="object-map-wrap">
-        <div class="object-map-label"><span>SCREEN MAP</span><span id="mapSizeLabel">640 × 400</span></div>
-        <div id="objectMap" class="object-map" role="application" aria-label="Game screen map">
-          <div class="map-hint" id="mapHint">Add text, then drag it anywhere on this map.</div>
+    <div class="maker-workspace">
+      <aside class="maker-sidebar maker-palette">
+        <div class="maker-panel-title">OBJECTS</div>
+        <div id="textObjectTool" class="object-tool" draggable="true" role="button" tabindex="0" aria-label="Drag Text object onto the map"><span class="text-tool-icon">T</span><span><strong>Text</strong><small>Display text on screen</small></span><span class="tool-grip">⠿</span></div>
+        <p class="palette-tip">Drag Text onto the map, or click it to add one.</p>
+        <div class="maker-panel-title object-list-title">SCENE OBJECTS</div>
+        <div id="sceneObjectList" class="scene-object-list"><p class="empty-object-list">No objects yet</p></div>
+      </aside>
+      <div class="maker-stage-area">
+        <div class="stage-toolbar"><span><span class="stage-dot"></span> SCENE</span><span>Drag to position · X / Y in pixels</span></div>
+        <div class="object-map-wrap"><div id="objectMap" class="object-map" role="application" aria-label="Game screen map"><div class="map-hint" id="mapHint">Drag a Text object here to add it to your game.</div></div></div>
+        <div class="stage-footer"><span id="objectEditorStatus" aria-live="polite">No objects in this scene.</span><span>Origin: top-left (0, 0)</span></div>
+      </div>
+      <aside class="maker-sidebar maker-inspector">
+        <div class="maker-panel-title">INSPECTOR</div>
+        <div id="inspectorEmpty" class="inspector-empty"><span>↖</span><strong>No object selected</strong><small>Choose a Text object on the map to edit its properties.</small></div>
+        <div id="inspectorFields" class="object-properties" hidden>
+          <div class="inspector-object-type"><span class="text-tool-icon">T</span><div><strong>Text</strong><small>Text object</small></div></div>
+          <label for="objectText">Text content</label><input id="objectText" value="Hello, world!" maxlength="200">
+          <div class="property-pair"><div><label for="objectX">X position</label><input id="objectX" type="number" min="0" value="100"></div><div><label for="objectY">Y position</label><input id="objectY" type="number" min="0" value="100"></div></div>
+          <div class="property-pair"><div><label for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="8" max="120" value="24"></div><div><label for="objectColor">Text color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
+          <button id="applyObject" class="quiet-button" type="button">Apply changes</button><button id="removeObject" class="quiet-button remove-object-button" type="button">Delete object</button>
+          <p class="object-editor-note">Text coordinates are measured in pixels from the top-left corner of the game screen.</p>
         </div>
-      </div>
-      <div class="object-properties">
-        <label for="objectText">Text</label><input id="objectText" value="Hello, world!" maxlength="200">
-        <div class="property-pair"><div><label for="objectX">X</label><input id="objectX" type="number" min="0" value="100"></div><div><label for="objectY">Y</label><input id="objectY" type="number" min="0" value="100"></div></div>
-        <div class="property-pair"><div><label for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="8" max="120" value="24"></div><div><label for="objectColor">Color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
-        <div class="object-actions"><button id="applyObject" class="quiet-button" type="button">Apply changes</button><button id="removeObject" class="quiet-button" type="button">Remove</button></div>
-        <button id="insertObjectCode" class="run-button insert-code-button" type="button">Insert rtext into code</button>
-        <p class="object-editor-note">Coordinates use the top-left of the game screen as (0, 0). Text is positioned by its baseline, just like canvas text.</p>
-        <div id="objectEditorStatus" class="object-editor-status" aria-live="polite">No text objects yet.</div>
-      </div>
+      </aside>
     </div>
   </section>
-  <script src="app.js?v=59"></script>
+  <script src="app.js?v=60"></script>
 </body>
 </html>
