@@ -696,3 +696,10 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 #highlightLayer .syntax-delimiter { color: #ffffff !important; }
 #highlightLayer .syntax-screen-command { color: #ff69b4 !important; }
 #highlightLayer .syntax-comment { color: #737b8d !important; font-style: italic; }
+
+
+/* Keep string quotation marks white without changing string or hex-color highlighting. */
+#highlightLayer .syntax-quote {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
