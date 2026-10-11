@@ -806,3 +806,134 @@ addFileButton.addEventListener("click", () => {
   fileList.querySelectorAll(".file-item").forEach(file => file.classList.toggle("active", file === item));
   saveStatus.textContent = name + " added to the file list";
 });
+
+ 
+// Visual object editor: create positioned text and insert it into Delta code.
+(() => {
+  const map = document.getElementById("objectMap");
+  if (!map) return;
+  const fields = {
+    text: document.getElementById("objectText"),
+    x: document.getElementById("objectX"),
+    y: document.getElementById("objectY"),
+    size: document.getElementById("objectFontSize"),
+    color: document.getElementById("objectColor")
+  };
+  const status = document.getElementById("objectEditorStatus");
+  const sizeLabel = document.getElementById("mapSizeLabel");
+  let objects = [];
+  let selectedId = null;
+  let nextId = 1;
+  let drag = null;
+  const screenSize = () => {
+    const screenLine = editor.value.match(/^\s*screen\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/m);
+    return { width: Number(screenLine?.[1]) || 640, height: Number(screenLine?.[2]) || 400 };
+  };
+  function updateMapSize() {
+    const size = screenSize();
+    sizeLabel.textContent = size.width + " × " + size.height;
+    map.style.aspectRatio = size.width + " / " + size.height;
+    map.style.setProperty("--map-width", size.width);
+    map.style.setProperty("--map-height", size.height);
+    renderObjects();
+  }
+  function selected() { return objects.find(item => item.id === selectedId); }
+  function renderObjects() {
+    map.querySelectorAll(".map-text-object").forEach(el => el.remove());
+    const size = screenSize();
+    for (const item of objects) {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "map-text-object" + (item.id === selectedId ? " selected" : "");
+      el.textContent = item.text || " ";
+      el.style.left = (item.x / size.width * 100) + "%";
+      el.style.top = (item.y / size.height * 100) + "%";
+      el.style.color = item.color;
+      el.style.fontSize = "clamp(8px, " + (item.size / size.height * 100) + "cqh, 42px)";
+      el.dataset.objectId = item.id;
+      el.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        selectedId = item.id;
+        syncFields();
+        const rect = map.getBoundingClientRect();
+        drag = { id: item.id, rect, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y };
+        el.setPointerCapture?.(event.pointerId);
+        renderObjects();
+      });
+      map.appendChild(el);
+    }
+    const hint = document.getElementById("mapHint");
+    if (hint) hint.style.display = objects.length ? "none" : "block";
+    status.textContent = objects.length ? objects.length + " text object" + (objects.length === 1 ? "" : "s") + (selectedId ? " · selected" : "") : "No text objects yet.";
+  }
+  function syncFields() {
+    const item = selected();
+    if (!item) return;
+    fields.text.value = item.text;
+    fields.x.value = Math.round(item.x);
+    fields.y.value = Math.round(item.y);
+    fields.size.value = item.size;
+    fields.color.value = item.color;
+  }
+  function applyFields() {
+    const item = selected();
+    if (!item) { status.textContent = "Add or select a text object first."; return; }
+    const size = screenSize();
+    item.text = fields.text.value;
+    item.x = Math.max(0, Math.min(size.width, Number(fields.x.value) || 0));
+    item.y = Math.max(0, Math.min(size.height, Number(fields.y.value) || 0));
+    item.size = Math.max(8, Math.min(120, Number(fields.size.value) || 24));
+    item.color = fields.color.value || "#ffffff";
+    fields.x.value = Math.round(item.x);
+    fields.y.value = Math.round(item.y);
+    renderObjects();
+  }
+  function addObject() {
+    const size = screenSize();
+    const item = { id: nextId++, text: fields.text.value || "New text", x: Math.min(100, size.width), y: Math.min(100, size.height), size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    objects.push(item);
+    selectedId = item.id;
+    syncFields();
+    renderObjects();
+  }
+  function objectCode(item) {
+    return "rtext(" + JSON.stringify(item.text) + ", " + Math.round(item.x) + ", " + Math.round(item.y) + ", " + JSON.stringify(item.color) + ", " + item.size + ")";
+  }
+  document.getElementById("addTextObject").addEventListener("click", addObject);
+  document.getElementById("applyObject").addEventListener("click", applyFields);
+  document.getElementById("removeObject").addEventListener("click", () => {
+    objects = objects.filter(item => item.id !== selectedId);
+    selectedId = objects.length ? objects[objects.length - 1].id : null;
+    if (selected()) syncFields();
+    renderObjects();
+  });
+  document.getElementById("insertObjectCode").addEventListener("click", () => {
+    const item = selected();
+    if (!item) { status.textContent = "Add or select a text object first."; return; }
+    const code = objectCode(item);
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const before = editor.value.slice(0, start);
+    const needsNewline = before.length > 0 && !before.endsWith("\n");
+    editor.setRangeText((needsNewline ? "\n" : "") + code + "\n", start, end, "end");
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    editor.focus();
+    status.textContent = "Inserted: " + code;
+  });
+  map.addEventListener("pointermove", event => {
+    if (!drag) return;
+    const item = objects.find(entry => entry.id === drag.id);
+    if (!item) return;
+    const size = screenSize();
+    item.x = Math.max(0, Math.min(size.width, drag.x + (event.clientX - drag.startX) / drag.rect.width * size.width));
+    item.y = Math.max(0, Math.min(size.height, drag.y + (event.clientY - drag.startY) / drag.rect.height * size.height));
+    fields.x.value = Math.round(item.x);
+    fields.y.value = Math.round(item.y);
+    renderObjects();
+  });
+  map.addEventListener("pointerup", () => { drag = null; });
+  map.addEventListener("pointercancel", () => { drag = null; });
+  for (const field of Object.values(fields)) field.addEventListener("keydown", event => { if (event.key === "Enter") applyFields(); });
+  editor.addEventListener("input", updateMapSize);
+  updateMapSize();
+})();
