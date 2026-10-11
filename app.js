@@ -847,7 +847,8 @@ addFileButton.addEventListener("click", () => {
 // Visual object editor: create positioned text and insert it into Delta code.
 (() => {
   const map = document.getElementById("objectMap");
-  if (!map) return;
+  const textObjectTool = document.getElementById("textObjectTool");
+  if (!map || !textObjectTool) return;
   const fields = {
     name: document.getElementById("objectName"),
     text: document.getElementById("objectText"),
