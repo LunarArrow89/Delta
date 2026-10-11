@@ -144,8 +144,17 @@ function updateEditorInfo() {
 }
 editor.addEventListener("input", () => {
   updateEditorInfo();
-  localStorage.setItem("delta-code", editor.value);
-  saveStatus.textContent = "Autosaved in this browser";
+  try {
+    localStorage.setItem("delta-code", editor.value);
+    const name = projectName.value.trim() || "Untitled Project";
+    const projects = getProjects();
+    projects[name] = editor.value;
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+    refreshProjects(name);
+    saveStatus.textContent = "Autosaved: " + name;
+  } catch (error) {
+    saveStatus.textContent = "Could not save: " + error.message;
+  }
 });
 editor.addEventListener("click", updateEditorInfo);
 editor.addEventListener("keyup", updateEditorInfo);
@@ -624,6 +633,23 @@ function runCode() {
       .replace(/^([ \t]*)square\s*\*speed\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "setSquareSpeed(" + args + ")")
       .replace(/^([ \t]*)square\s*\*movement\*\s*\(([^)]*)\)[ \t]*$/gm, (_, indent, args) => indent + "moveSquare(" + args + ")")
       .replace(/^([ \t]*)(rect|circle)\s*\*movement\*\s*\(/gm, (_, indent, shape) => indent + (shape === "rect" ? "moveRect(" : "moveCircle("))
+      .replace(/^([ \t]*)ask\(:([\s\S]*?):\)[ \t]*$/gm, (_, indent, inside) => {
+        const parts = inside.split(/\/([A-Za-z_][A-Za-z0-9_]*)\//g);
+        let expression = "";
+        parts.forEach((part, index) => {
+          if (index % 2 === 0) {
+            if (part) expression += (expression ? " + " : "") + JSON.stringify(part);
+          } else {
+            expression += (expression ? " + " : "") + "String(" + part + ")";
+          }
+        });
+        return indent + "ask(" + (expression || '""') + ")";
+      })
+      .replace(/^([ \t]*)ask:\((.*?)\)[ \t]*$/gm, (_, indent, inside) => {
+        const joined = inside.match(/^(.*?)\s*:\s*\+\s*:([A-Za-z_][A-Za-z0-9_]*):\s*$/);
+        if (joined) return indent + "ask(" + JSON.stringify(joined[1].trimEnd() + " ") + " + String(" + joined[2] + "))";
+        return indent + "ask(" + JSON.stringify(inside) + ")";
+      })
       .replace(/^([ \t]*)ask:(.*):[ \t]*$/gm, (_, indent, message) => indent + "ask(" + JSON.stringify(message) + ")")
       .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(["'])(.*?)\3\s*\)[ \t]*$/gm, (_, indent, message, quote, properties) => {
         const getProperty = (key, fallback) => {
