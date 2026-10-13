@@ -1411,6 +1411,9 @@ function runCode() {
           if (!match) throw new Error("Unknown " + type + " setting: " + line);
           settings[match[1]] = match[2];
         }
+        if (!settings.name || !settings.name.trim()) {
+          throw new Error("Syntax error: every shape needs a name(...). Example: square[ name(Player) location(100, 100) size(40) color(\"#00ff88\") ]");
+        }
         const loc = settings.location ? settings.location.split(",").map(v=>v.trim()) : ["100","100"];
         const color = settings.color ?? '"#ffffff"';
         const movement = settings.movement;
