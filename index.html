@@ -1401,10 +1401,11 @@ function runCode() {
   const started = performance.now();
   try {
     const source = editor.value
-      // Convert Delta's own text(:words: + /variable/) syntax into a print expression.
+      // Draw Delta's text(:words:) syntax directly onto the game screen.
       .replace(/^([ \t]*)text\(\s*:([^:]*)\:\s*(?:\+\s*\/([A-Za-z_][A-Za-z0-9_]*)\/)?\s*\)[ \t]*$/gm, (_, indent, message, variable) => {
         const textPart = JSON.stringify(message.trimEnd());
-        return indent + "print(" + (variable ? textPart + " + String(" + variable + ")" : textPart) + ")";
+        const value = variable ? textPart + " + String(" + variable + ")" : textPart;
+        return indent + "drawText(" + value + ", 100, 100, \"#ffffff\", 24)";
       })
       // Allow simple one-line indented-style conditions without requiring braces.
       .replace(/^([ \t]*)if(\d*)\s+(.+?)\s*\r?\n([ \t]*)([^\r\n]+)$/gm, (whole, indent, number, condition, nextIndent, nextLine) => {
