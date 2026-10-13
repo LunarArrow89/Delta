@@ -547,7 +547,10 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
 .object-map { position:relative; width:100%; aspect-ratio:640 / 400; max-height:520px; overflow:hidden; container-type:size; background-color:#10131c; background-image:linear-gradient(#34394a66 1px,transparent 1px),linear-gradient(90deg,#34394a66 1px,transparent 1px); background-size:5% 5%; border:1px solid #53596b; border-radius:7px; touch-action:none; }
 .map-hint { position:absolute; inset:0; display:grid; place-items:center; padding:16px; text-align:center; color:#8e95a8; font-size:13px; pointer-events:none; }
 .map-text-object { position:absolute; transform:translateY(-100%); padding:2px 4px; margin:0; max-width:95%; overflow-wrap:anywhere; white-space:pre-wrap; background:transparent; border:1px dashed transparent; border-radius:3px; font-family:system-ui,sans-serif; font-weight:400; line-height:1.2; text-align:left; touch-action:none; cursor:move; }
-.map-text-object.selected { border-color:var(--accent); background:#9c8cff22; outline:1px solid #9c8cff44; }
+.map-object-square,.map-object-rect,.map-object-circle,.map-object-triangle { min-width:8px; min-height:8px; padding:0; border:1px solid #ffffff55; transform:translateY(-50%); box-sizing:border-box; }
+  .map-object-text { transform:translateY(-100%); }
+  .map-object-triangle { clip-path:polygon(50% 0, 0 100%, 100% 100%); }
+  .map-text-object.selected { border-color:var(--accent); background:#9c8cff22; outline:1px solid #9c8cff44; }
 .object-properties { display:flex; flex-direction:column; gap:7px; min-width:0; }
 .object-properties label { color:#aeb5c6; font-size:11px; font-weight:700; }
 .object-properties input { width:100%; min-width:0; padding:9px 10px; color:var(--text); background:#191c24; border:1px solid #3a4050; border-radius:7px; font:13px inherit; }
@@ -766,8 +769,12 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
     <div class="maker-workspace">
       <aside class="maker-sidebar maker-palette">
         <div class="maker-panel-title">OBJECTS</div>
-        <div id="textObjectTool" class="object-tool" draggable="true" role="button" tabindex="0" aria-label="Drag Text object onto the map"><span class="text-tool-icon">T</span><span><strong>Text</strong><small>Display text on screen</small></span><span class="tool-grip">⠿</span></div>
-        <p class="palette-tip">Drag Text onto the map, or click it to add one.</p>
+        <div id="textObjectTool" class="object-tool" data-object-type="text" draggable="true" role="button" tabindex="0" aria-label="Drag Text object onto the map"><span class="text-tool-icon">T</span><span><strong>Text</strong><small>Display text on screen</small></span><span class="tool-grip">⠿</span></div>
+        <div class="object-tool" data-object-type="square" draggable="true" role="button" tabindex="0"><span class="text-tool-icon">□</span><span><strong>Square</strong><small>Solid square</small></span><span class="tool-grip">⠿</span></div>
+        <div class="object-tool" data-object-type="rect" draggable="true" role="button" tabindex="0"><span class="text-tool-icon">▭</span><span><strong>Rectangle</strong><small>Solid rectangle</small></span><span class="tool-grip">⠿</span></div>
+        <div class="object-tool" data-object-type="circle" draggable="true" role="button" tabindex="0"><span class="text-tool-icon">●</span><span><strong>Circle</strong><small>Solid circle</small></span><span class="tool-grip">⠿</span></div>
+        <div class="object-tool" data-object-type="triangle" draggable="true" role="button" tabindex="0"><span class="text-tool-icon">△</span><span><strong>Triangle</strong><small>Solid triangle</small></span><span class="tool-grip">⠿</span></div>
+        <p class="palette-tip">Drag an object onto the map, or click it to add one.</p>
         <div class="maker-panel-title object-list-title">SCENE OBJECTS</div>
         <div id="sceneObjectList" class="scene-object-list"><p class="empty-object-list">No objects yet</p></div>
       </aside>
@@ -780,10 +787,10 @@ kbd { padding: 2px 5px; border: 1px solid #4a5060; border-radius: 4px; backgroun
         <div class="maker-panel-title">INSPECTOR</div>
         <div id="inspectorEmpty" class="inspector-empty"><span>↖</span><strong>No object selected</strong><small>Choose a Text object on the map to edit its properties.</small></div>
         <div id="inspectorFields" class="object-properties" hidden>
-          <div class="inspector-object-type"><span class="text-tool-icon">T</span><div><strong>Text</strong><small>Text object</small></div></div>
-          <label for="objectName">Object name</label><input id="objectName" value="Text 1" maxlength="40"><label for="objectText">Text content</label><input id="objectText" value="Hello, world!" maxlength="200">
+          <div class="inspector-object-type"><span id="inspectorTypeIcon" class="text-tool-icon">T</span><div><strong id="inspectorTypeName">Text</strong><small id="inspectorTypeDescription">Text object</small></div></div>
+          <label for="objectName">Object name</label><input id="objectName" value="Text 1" maxlength="40"><label id="objectTextLabel" for="objectText">Text content</label><input id="objectText" value="Hello, world!" maxlength="200">
           <div class="property-pair"><div><label for="objectX">X position</label><input id="objectX" type="number" min="0" value="100"></div><div><label for="objectY">Y position</label><input id="objectY" type="number" min="0" value="100"></div></div>
-          <div class="property-pair"><div><label for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="8" max="120" value="24"></div><div><label for="objectColor">Text color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
+          <div class="property-pair"><div><label id="objectSizeLabel" for="objectFontSize">Font size</label><input id="objectFontSize" type="number" min="8" max="240" value="24"></div><div><label for="objectColor">Color</label><input id="objectColor" type="color" value="#ffffff"></div></div>
           <button id="applyObject" class="quiet-button" type="button">Apply changes</button><button id="removeObject" class="quiet-button remove-object-button" type="button">Delete object</button>
           <p class="object-editor-note">Text coordinates are measured in pixels from the top-left corner of the game screen.</p>
         </div>
@@ -1407,7 +1414,7 @@ function runCode() {
       .replace(/^([ \t]*)(square|rect|circle|triangle)\s*\[([\s\S]*?)\][ \t]*$/gm, (_, indent, type, body) => {
         const settings = {};
         for (const line of body.split(/\r?\n/).map(line => line.trim()).filter(Boolean)) {
-          const match = line.match(/^(location|size|width|height|radius|color|speed|movement)\s*\((.*)\)\s*$/);
+          const match = line.match(/^(name|location|size|width|height|radius|color|speed|movement)\s*\((.*)\)\s*$/);
           if (!match) throw new Error("Unknown " + type + " setting: " + line);
           settings[match[1]] = match[2];
         }
@@ -1658,6 +1665,7 @@ addFileButton.addEventListener("click", () => {
   const map = document.getElementById("objectMap");
   const textObjectTool = document.getElementById("textObjectTool");
   if (!map || !textObjectTool) return;
+  const tools = Array.from(document.querySelectorAll(".object-tool[data-object-type]"));
   const fields = {
     name: document.getElementById("objectName"),
     text: document.getElementById("objectText"),
@@ -1671,6 +1679,11 @@ addFileButton.addEventListener("click", () => {
   const sceneObjectList = document.getElementById("sceneObjectList");
   const status = document.getElementById("objectEditorStatus");
   const sizeLabel = document.getElementById("mapSizeLabel");
+  const typeIcon = document.getElementById("inspectorTypeIcon");
+  const typeName = document.getElementById("inspectorTypeName");
+  const typeDescription = document.getElementById("inspectorTypeDescription");
+  const textLabel = document.getElementById("objectTextLabel");
+  const sizeFieldLabel = document.getElementById("objectSizeLabel");
   let objects = [];
   let selectedId = null;
   let nextId = 1;
@@ -1694,13 +1707,17 @@ addFileButton.addEventListener("click", () => {
     for (const item of objects) {
       const el = document.createElement("button");
       el.type = "button";
-      el.className = "map-text-object" + (item.id === selectedId ? " selected" : "");
-      el.textContent = item.text || " ";
-      el.title = item.name || "Text";
+      el.className = "map-text-object map-object-" + item.type + (item.id === selectedId ? " selected" : "");
+      el.textContent = item.type === "text" ? (item.text || " ") : "";
+      el.title = item.name || item.type;
       el.style.left = (item.x / size.width * 100) + "%";
       el.style.top = (item.y / size.height * 100) + "%";
       el.style.color = item.color;
+      el.style.backgroundColor = item.type === "text" ? "transparent" : item.color;
       el.style.fontSize = "clamp(8px, " + (item.size / size.height * 100) + "cqh, 42px)";
+      if (item.type === "circle" || item.type === "square") { el.style.width = (item.size / size.width * 100) + "%"; el.style.aspectRatio = "1"; el.style.height = "auto"; if (item.type === "circle") el.style.borderRadius = "50%"; }
+      else if (item.type === "rect") { el.style.width = (item.size * 1.5 / size.width * 100) + "%"; el.style.height = (item.size / size.height * 100) + "%"; }
+      else if (item.type === "triangle") { el.style.width = (item.size / size.width * 100) + "%"; el.style.height = (item.size / size.height * 100) + "%"; el.style.clipPath = "polygon(50% 0, 0 100%, 100% 100%)"; }
       el.dataset.objectId = item.id;
       el.addEventListener("pointerdown", event => {
         if (event.button !== 0) return;
@@ -1744,7 +1761,7 @@ addFileButton.addEventListener("click", () => {
       inspectorFields.style.display = hasSelection ? "flex" : "none";
     }
     if (hasSelection) syncFields();
-    status.textContent = objects.length ? objects.length + " text object" + (objects.length === 1 ? "" : "s") + (hasSelection ? " · selected" : "") : "No text objects yet.";
+    status.textContent = objects.length ? objects.length + " object" + (objects.length === 1 ? "" : "s") + (hasSelection ? " · selected" : "") : "No objects yet.";
   }
   function syncFields() {
     const item = selected();
@@ -1757,8 +1774,14 @@ addFileButton.addEventListener("click", () => {
       inspectorFields.hidden = false;
       inspectorFields.style.display = "flex";
     }
-    fields.name.value = item.name || "Text " + item.id;
-    fields.text.value = item.text;
+    fields.name.value = item.name || item.type + " " + item.id;
+    fields.text.value = item.text || "";
+    fields.text.hidden = item.type !== "text";
+    if (textLabel) textLabel.hidden = item.type !== "text";
+    if (typeIcon) typeIcon.textContent = ({text:"T",square:"□",rect:"▭",circle:"●",triangle:"△"})[item.type] || "?";
+    if (typeName) typeName.textContent = item.type === "rect" ? "Rectangle" : item.type.charAt(0).toUpperCase() + item.type.slice(1);
+    if (typeDescription) typeDescription.textContent = item.type === "text" ? "Text object" : "Shape object";
+    if (sizeFieldLabel) sizeFieldLabel.textContent = item.type === "text" ? "Font size" : item.type === "circle" ? "Radius / size" : "Size";
     fields.x.value = Math.round(item.x);
     fields.y.value = Math.round(item.y);
     fields.size.value = item.size;
@@ -1768,11 +1791,11 @@ addFileButton.addEventListener("click", () => {
     const item = selected();
     if (!item) { status.textContent = "Add or select a text object first."; return; }
     const size = screenSize();
-    item.name = fields.name.value.trim() || "Text " + item.id;
-    item.text = fields.text.value;
+    item.name = fields.name.value.trim() || item.type + " " + item.id;
+    if (item.type === "text") item.text = fields.text.value;
     item.x = Math.max(0, Math.min(size.width, Number(fields.x.value) || 0));
     item.y = Math.max(0, Math.min(size.height, Number(fields.y.value) || 0));
-    item.size = Math.max(8, Math.min(120, Number(fields.size.value) || 24));
+    item.size = Math.max(8, Math.min(240, Number(fields.size.value) || 24));
     item.color = fields.color.value || "#ffffff";
     fields.x.value = Math.round(item.x);
     fields.y.value = Math.round(item.y);
@@ -1791,32 +1814,38 @@ addFileButton.addEventListener("click", () => {
     const safeText = String(item.text || "").replace(/:/g, "：").replace(/[\r\n]+/g, " ");
     return "// " + (item.name || "Text " + item.id).replace(/[\r\n]+/g, " ") + "\n" + "text(:" + safeText + ': "color: ' + item.color + ", size: " + item.size + ", x: " + Math.round(item.x) + ", y: " + Math.round(item.y) + '")';
   }
-  function addAt(clientX, clientY) {
+  function objectCode(item) {
+    const name = String(item.name || item.type + " " + item.id).replace(/[\r\n]+/g, " ").replace(/[()\[\]]/g, "");
+    if (item.type !== "text") {
+      const dim = item.type === "circle" ? "radius" : "size";
+      return "// " + name + "\n" + item.type + "[\n    name(" + name + ")\n    location(" + Math.round(item.x) + ", " + Math.round(item.y) + ")\n    " + dim + "(" + Math.round(item.size) + ")\n    color(" + JSON.stringify(item.color) + ")\n]";
+    }
+    const safeText = String(item.text || "").replace(/:/g, "：").replace(/[\r\n]+/g, " ");
+    return "// " + name + "\ntext(:" + safeText + ': "color: ' + item.color + ", size: " + item.size + ", x: " + Math.round(item.x) + ", y: " + Math.round(item.y) + '")';
+  }
+  function addAt(clientX, clientY, type = "text") {
     const rect = map.getBoundingClientRect();
     const size = screenSize();
     const x = Math.max(0, Math.min(size.width, (clientX - rect.left) / rect.width * size.width));
     const y = Math.max(0, Math.min(size.height, (clientY - rect.top) / rect.height * size.height));
     const id = nextId++;
-    const item = { id, name: (fields.name.value.trim() && fields.name.value.trim() !== "Text 1" ? fields.name.value.trim() : "Text " + id), text: fields.text.value || "Text", x, y, size: Math.max(8, Number(fields.size.value) || 24), color: fields.color.value || "#ffffff" };
+    const label = type === "rect" ? "Rectangle" : type.charAt(0).toUpperCase() + type.slice(1);
+    const typedName = fields.name.value.trim();
+    const item = { id, type, name: (typedName && typedName !== "Text 1" ? typedName : label + " " + id), text: type === "text" ? (fields.text.value || "Text") : "", x, y, size: Math.max(8, Number(fields.size.value) || (type === "circle" ? 20 : 40)), color: fields.color.value || (type === "text" ? "#ffffff" : "#00ff88") };
     objects.push(item); selectedId = item.id; syncFields(); renderObjects();
   }
-  textObjectTool.addEventListener("click", () => {
-    const rect = map.getBoundingClientRect();
-    addAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
-  });
-  textObjectTool.addEventListener("keydown", event => {
-    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); textObjectTool.click(); }
-  });
-  textObjectTool.addEventListener("dragstart", event => {
-    event.dataTransfer.setData("application/x-delta-object", "Text");
-    event.dataTransfer.setData("text/plain", "Text");
-    event.dataTransfer.effectAllowed = "copy";
-  });
+  for (const tool of tools) {
+    const type = tool.dataset.objectType || "text";
+    tool.addEventListener("click", () => { const rect = map.getBoundingClientRect(); addAt(rect.left + rect.width / 2, rect.top + rect.height / 2, type); });
+    tool.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); tool.click(); } });
+    tool.addEventListener("dragstart", event => { event.dataTransfer.setData("application/x-delta-object", type); event.dataTransfer.setData("text/plain", type); event.dataTransfer.effectAllowed = "copy"; });
+  }
   map.addEventListener("dragover", event => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; map.classList.add("drop-target"); });
   map.addEventListener("dragleave", event => { if (!map.contains(event.relatedTarget)) map.classList.remove("drop-target"); });
   map.addEventListener("drop", event => {
     event.preventDefault(); map.classList.remove("drop-target");
-    if (event.dataTransfer.getData("application/x-delta-object") === "Text" || event.dataTransfer.getData("text/plain") === "Text") addAt(event.clientX, event.clientY);
+    const type = event.dataTransfer.getData("application/x-delta-object") || event.dataTransfer.getData("text/plain");
+    if (["text","square","rect","circle","triangle"].includes(type)) addAt(event.clientX, event.clientY, type);
   });
   document.getElementById("applyObject").addEventListener("click", applyFields);
   document.getElementById("removeObject").addEventListener("click", () => {
